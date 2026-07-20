@@ -1,0 +1,34 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/resources/**
+!**/src/test/resources/**
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+### Eclipse ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### NetBeans ###
+/nbproject/private/
+/build/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### OS / Logs ###
+.DS_Store
+Thumbs.db
+*.log
+*.tmp

@@ -1,0 +1,111 @@
+version: '3.8'
+
+services:
+  eureka-server:
+    build:
+      context: ./eureka-server
+      dockerfile: Dockerfile
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - EUREKA_USERNAME=admin
+      - EUREKA_PASSWORD=admin123
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  config-server:
+    build:
+      context: ./config-server
+      dockerfile: Dockerfile
+    container_name: config-server
+    ports:
+      - "8888:8888"
+    environment:
+      - SPRING_PROFILES_ACTIVE=native
+      - EUREKA_SERVER_URL=http://admin:admin123@eureka-server:8761/eureka/
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: user-service
+    ports:
+      - "8084:8084"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - EUREKA_SERVER_URL=http://admin:admin123@eureka-server:8761/eureka/
+      - CONFIG_SERVER_URL=http://config-server:8888
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: auth-service
+    ports:
+      - "8085:8085"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - EUREKA_SERVER_URL=http://admin:admin123@eureka-server:8761/eureka/
+      - CONFIG_SERVER_URL=http://config-server:8888
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+
+  room-service:
+    build:
+      context: ./room-service
+      dockerfile: Dockerfile
+    container_name: room-service
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - EUREKA_SERVER_URL=http://admin:admin123@eureka-server:8761/eureka/
+      - CONFIG_SERVER_URL=http://config-server:8888
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+
+  booking-service:
+    build:
+      context: ./booking-service
+      dockerfile: Dockerfile
+    container_name: booking-service
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - EUREKA_SERVER_URL=http://admin:admin123@eureka-server:8761/eureka/
+      - CONFIG_SERVER_URL=http://config-server:8888
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - EUREKA_SERVER_URL=http://admin:admin123@eureka-server:8761/eureka/
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+
+networks:
+  default:
+    name: meetingroom-network

@@ -1,0 +1,130 @@
+version: '3.8'
+
+services:
+  eureka-server:
+    image: ${DOCKER_HUB_USERNAME}/meetingroom-eureka-server:latest
+    container_name: eureka-server
+    restart: always
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - EUREKA_USERNAME=${EUREKA_USERNAME:-admin}
+      - EUREKA_PASSWORD=${EUREKA_PASSWORD:-admin123}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  config-server:
+    image: ${DOCKER_HUB_USERNAME}/meetingroom-config-server:latest
+    container_name: config-server
+    restart: always
+    ports:
+      - "8888:8888"
+    environment:
+      - SPRING_PROFILES_ACTIVE=native
+      - EUREKA_SERVER_URL=http://${EUREKA_USERNAME:-admin}:${EUREKA_PASSWORD:-admin123}@eureka-server:8761/eureka/
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+
+  user-service:
+    image: ${DOCKER_HUB_USERNAME}/meetingroom-user-service:latest
+    container_name: user-service
+    restart: always
+    ports:
+      - "8084:8084"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - EUREKA_SERVER_URL=http://${EUREKA_USERNAME:-admin}:${EUREKA_PASSWORD:-admin123}@eureka-server:8761/eureka/
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - RDS_ENDPOINT=${RDS_ENDPOINT}
+      - RDS_PORT=${RDS_PORT:-5432}
+      - RDS_DB_NAME=${RDS_DB_NAME:-postgres}
+      - RDS_USERNAME=${RDS_USERNAME}
+      - RDS_PASSWORD=${RDS_PASSWORD}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+
+  auth-service:
+    image: ${DOCKER_HUB_USERNAME}/meetingroom-auth-service:latest
+    container_name: auth-service
+    restart: always
+    ports:
+      - "8085:8085"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - EUREKA_SERVER_URL=http://${EUREKA_USERNAME:-admin}:${EUREKA_PASSWORD:-admin123}@eureka-server:8761/eureka/
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+
+  room-service:
+    image: ${DOCKER_HUB_USERNAME}/meetingroom-room-service:latest
+    container_name: room-service
+    restart: always
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - EUREKA_SERVER_URL=http://${EUREKA_USERNAME:-admin}:${EUREKA_PASSWORD:-admin123}@eureka-server:8761/eureka/
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - RDS_ENDPOINT=${RDS_ENDPOINT}
+      - RDS_PORT=${RDS_PORT:-5432}
+      - RDS_DB_NAME=${RDS_DB_NAME:-postgres}
+      - RDS_USERNAME=${RDS_USERNAME}
+      - RDS_PASSWORD=${RDS_PASSWORD}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+
+  booking-service:
+    image: ${DOCKER_HUB_USERNAME}/meetingroom-booking-service:latest
+    container_name: booking-service
+    restart: always
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - EUREKA_SERVER_URL=http://${EUREKA_USERNAME:-admin}:${EUREKA_PASSWORD:-admin123}@eureka-server:8761/eureka/
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - RDS_ENDPOINT=${RDS_ENDPOINT}
+      - RDS_PORT=${RDS_PORT:-5432}
+      - RDS_DB_NAME=${RDS_DB_NAME:-postgres}
+      - RDS_USERNAME=${RDS_USERNAME}
+      - RDS_PASSWORD=${RDS_PASSWORD}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+
+  api-gateway:
+    image: ${DOCKER_HUB_USERNAME}/meetingroom-api-gateway:latest
+    container_name: api-gateway
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - EUREKA_SERVER_URL=http://${EUREKA_USERNAME:-admin}:${EUREKA_PASSWORD:-admin123}@eureka-server:8761/eureka/
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+
+  frontend:
+    image: ${DOCKER_HUB_USERNAME}/meetingroom-frontend:latest
+    container_name: frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - api-gateway
+
+networks:
+  default:
+    name: meetingroom-network

@@ -1,0 +1,91 @@
+package com.meetingroom.auth.service.impl;
+
+import com.meetingroom.auth.client.UserResponse;
+import com.meetingroom.auth.client.UserServiceClient;
+import com.meetingroom.auth.dto.request.LoginRequest;
+import com.meetingroom.auth.dto.response.ApiResponse;
+import com.meetingroom.auth.dto.response.JwtAuthResponse;
+import com.meetingroom.auth.exception.BusinessException;
+import com.meetingroom.auth.security.JwtTokenProvider;
+import com.meetingroom.auth.service.AuthService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Slf4j
+@RefreshScope
+@Service
+@RequiredArgsConstructor
+public class AuthServiceImpl implements AuthService {
+
+    private final UserServiceClient userServiceClient;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
+
+    @Override
+    public JwtAuthResponse login(LoginRequest request) {
+        log.info("Attempting login for user: {}", request.getEmail());
+
+        UserResponse user = fetchUserByEmail(request.getEmail());
+
+        if (user.getIsActive() == null || !user.getIsActive()) {
+            log.warn("Login failed: Account for email '{}' is deactivated", request.getEmail());
+            throw new BusinessException("User account is deactivated. Please contact support.", HttpStatus.FORBIDDEN);
+        }
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            log.warn("Login failed: Invalid credentials for email '{}'", request.getEmail());
+            throw new BusinessException("Invalid email or password", HttpStatus.UNAUTHORIZED);
+        }
+
+        String token = jwtTokenProvider.generateToken(user.getId(), user.getEmail(), user.getRoles());
+        log.info("Login successful for user: {}. Roles: {}", request.getEmail(), user.getRoles());
+
+        return JwtAuthResponse.builder()
+                .accessToken(token)
+                .tokenType("Bearer")
+                .userId(user.getId())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .roles(user.getRoles())
+                .build();
+    }
+
+    @Override
+    public Map<String, Object> validateToken(String token) {
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+
+        boolean isValid = jwtTokenProvider.validateToken(token);
+        Map<String, Object> response = new HashMap<>();
+        response.put("valid", isValid);
+
+        if (isValid) {
+            response.put("email", jwtTokenProvider.getEmailFromToken(token));
+            response.put("userId", jwtTokenProvider.getUserIdFromToken(token));
+            response.put("roles", jwtTokenProvider.getRolesFromToken(token));
+        }
+
+        return response;
+    }
+
+    private UserResponse fetchUserByEmail(String email) {
+        try {
+            ApiResponse<UserResponse> response = userServiceClient.getUserByEmail(email);
+            if (response != null && response.isSuccess() && response.getData() != null) {
+                return response.getData();
+            }
+        } catch (Exception ex) {
+            log.error("Failed to fetch user details for email: {}", email, ex);
+        }
+        throw new BusinessException("Invalid email or password", HttpStatus.UNAUTHORIZED);
+    }
+}

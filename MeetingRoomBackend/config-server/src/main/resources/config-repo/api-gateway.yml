@@ -1,0 +1,52 @@
+# ─────────────────────────────────────────────────────────────
+# api-gateway.yml  ←  served by Config Server (port 8888)
+# Changes here are picked up at runtime via:
+#   POST http://localhost:8080/actuator/refresh
+# ─────────────────────────────────────────────────────────────
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:MeetingRoomProjectSuperSecretSigningKey2026With256BitsMinimumLength!}
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowSize: 10
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 5
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+  timelimiter:
+    configs:
+      default:
+        timeoutDuration: 10s
+
+spring:
+  cloud:
+    gateway:
+      default-filters:
+        - DeduplicateResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOriginPatterns:
+              - "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+              - HEAD
+              - PATCH
+            allowedHeaders:
+              - "*"
+            exposedHeaders:
+              - Authorization
+              - X-Correlation-ID
+              - X-User-Email
+              - X-User-Roles
+            allowCredentials: true
+            maxAge: 3600

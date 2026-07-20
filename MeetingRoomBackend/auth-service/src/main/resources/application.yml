@@ -1,0 +1,39 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: auth-service
+  profiles:
+    active: dev
+  config:
+    import: "optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}"
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://admin:admin123@localhost:8761/eureka/}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:MeetingRoomProjectSuperSecretSigningKey2026With256BitsMinimumLength!}
+    expiration-ms: 86400000 # 24 Hours
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,refresh,env
+  endpoint:
+    health:
+      show-details: always

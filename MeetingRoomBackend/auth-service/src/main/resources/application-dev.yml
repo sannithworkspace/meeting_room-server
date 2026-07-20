@@ -1,0 +1,4 @@
+logging:
+  level:
+    com.meetingroom.auth: DEBUG
+    org.springframework.web: DEBUG

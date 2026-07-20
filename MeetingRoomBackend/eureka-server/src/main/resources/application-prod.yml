@@ -1,0 +1,19 @@
+server:
+  port: 8761
+
+eureka:
+  server:
+    enable-self-preservation: true
+    eviction-interval-timer-in-ms: 15000
+    response-cache-update-interval-ms: 5000
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized

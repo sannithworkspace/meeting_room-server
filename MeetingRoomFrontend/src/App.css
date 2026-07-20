@@ -1,0 +1,11 @@
+.app-main {
+  min-height: calc(100vh - 80px);
+}
+
+footer {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  border-top: 1px solid var(--border-glass);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}

@@ -1,0 +1,81 @@
+.confirmation-card {
+  width: 100%;
+  max-width: 500px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+}
+
+.success-icon-badge {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--accent-emerald);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem auto;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.25);
+}
+
+.confirmation-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.confirmation-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin-bottom: 1.75rem;
+}
+
+.receipt-box {
+  padding: 1.25rem;
+  border-radius: var(--radius-md);
+  background: rgba(10, 14, 23, 0.6);
+  border: 1px solid var(--border-glass);
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.75rem;
+}
+
+.receipt-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.88rem;
+}
+
+.receipt-label {
+  color: var(--text-muted);
+}
+
+.receipt-value {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.btn-done {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 15px var(--accent-cyan-glow);
+  transition: var(--transition-fast);
+}
+
+.btn-done:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px var(--accent-cyan-glow);
+}

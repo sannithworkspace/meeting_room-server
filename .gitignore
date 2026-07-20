@@ -1,0 +1,26 @@
+# Maven build output
+**/target/
+!**/src/main/resources/**
+!**/src/test/resources/**
+*.jar
+*.war
+
+# Node dependencies & frontend builds
+**/node_modules/
+**/dist/
+**/build/
+.npm
+*.log
+
+# IDE & OS files
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Sensitive local env files
+.env.local
+.env.production
