@@ -58,10 +58,22 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
         ServerHttpRequest request = exchange.getRequest();
         String path = request.getURI().getPath();
 
-        // ── CORS Preflight: always pass OPTIONS through without JWT check ──
+        // ── CORS Preflight: handle OPTIONS requests directly at API Gateway level ──
         if (HttpMethod.OPTIONS.equals(request.getMethod())) {
-            log.trace("OPTIONS preflight request to {}. Bypassing JWT filter.", path);
-            return chain.filter(exchange);
+            log.debug("CORS Preflight OPTIONS request for path: {}. Returning 200 OK directly from API Gateway.", path);
+            ServerHttpResponse response = exchange.getResponse();
+            HttpHeaders headers = response.getHeaders();
+
+            String requestOrigin = request.getHeaders().getFirst(HttpHeaders.ORIGIN);
+            headers.set(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, requestOrigin != null ? requestOrigin : "*");
+            headers.set(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH");
+            headers.set(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS, "*");
+            headers.set("Access-Control-Expose-Headers", "Authorization, X-Correlation-ID, X-User-Email, X-User-Roles");
+            headers.set(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
+            headers.set(HttpHeaders.ACCESS_CONTROL_MAX_AGE, "3600");
+
+            response.setStatusCode(HttpStatus.OK);
+            return response.setComplete();
         }
 
         // Check if path is whitelisted as public
