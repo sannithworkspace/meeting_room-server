@@ -27,7 +27,7 @@ jobs:
           context: ./MeetingRoomFrontend
           push: true
           build-args: |
-            VITE_API_BASE_URL=http://${{ secrets.EC2_HOST }}:8080
+            VITE_API_BASE_URL=/api
           tags: |
             ${{ secrets.DOCKER_HUB_USERNAME }}/meetingroom-frontend:latest
             ${{ secrets.DOCKER_HUB_USERNAME }}/meetingroom-frontend:${{ github.sha }}

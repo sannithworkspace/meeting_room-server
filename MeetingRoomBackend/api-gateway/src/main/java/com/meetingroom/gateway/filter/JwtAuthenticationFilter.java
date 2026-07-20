@@ -65,11 +65,15 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
             HttpHeaders headers = response.getHeaders();
 
             String requestOrigin = request.getHeaders().getFirst(HttpHeaders.ORIGIN);
-            headers.set(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, requestOrigin != null ? requestOrigin : "*");
+            if (requestOrigin != null && !requestOrigin.isEmpty()) {
+                headers.set(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, requestOrigin);
+                headers.set(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
+            } else {
+                headers.set(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+            }
             headers.set(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH");
             headers.set(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS, "*");
             headers.set("Access-Control-Expose-Headers", "Authorization, X-Correlation-ID, X-User-Email, X-User-Roles");
-            headers.set(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
             headers.set(HttpHeaders.ACCESS_CONTROL_MAX_AGE, "3600");
 
             response.setStatusCode(HttpStatus.OK);
