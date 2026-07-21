@@ -47,7 +47,7 @@ services:
       - CONFIG_SERVER_URL=http://config-server:8888
       - RDS_ENDPOINT=${RDS_ENDPOINT:-database-1.c96i6y2g0vfl.eu-north-1.rds.amazonaws.com}
       - RDS_PORT=${RDS_PORT:-3306}
-      - RDS_DB_NAME=${RDS_DB_NAME:-mysql}
+      - RDS_DB_NAME=${RDS_DB_NAME:-meetingroomdb}
       - RDS_USERNAME=${RDS_USERNAME:-admin}
       - RDS_PASSWORD=${RDS_PASSWORD:-Meetingroom123}
     depends_on:
@@ -82,7 +82,7 @@ services:
       - CONFIG_SERVER_URL=http://config-server:8888
       - RDS_ENDPOINT=${RDS_ENDPOINT:-database-1.c96i6y2g0vfl.eu-north-1.rds.amazonaws.com}
       - RDS_PORT=${RDS_PORT:-3306}
-      - RDS_DB_NAME=${RDS_DB_NAME:-mysql}
+      - RDS_DB_NAME=${RDS_DB_NAME:-meetingroomdb}
       - RDS_USERNAME=${RDS_USERNAME:-admin}
       - RDS_PASSWORD=${RDS_PASSWORD:-Meetingroom123}
     depends_on:
@@ -102,7 +102,7 @@ services:
       - CONFIG_SERVER_URL=http://config-server:8888
       - RDS_ENDPOINT=${RDS_ENDPOINT:-database-1.c96i6y2g0vfl.eu-north-1.rds.amazonaws.com}
       - RDS_PORT=${RDS_PORT:-3306}
-      - RDS_DB_NAME=${RDS_DB_NAME:-mysql}
+      - RDS_DB_NAME=${RDS_DB_NAME:-meetingroomdb}
       - RDS_USERNAME=${RDS_USERNAME:-admin}
       - RDS_PASSWORD=${RDS_PASSWORD:-Meetingroom123}
     depends_on:
