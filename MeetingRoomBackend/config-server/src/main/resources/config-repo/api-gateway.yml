@@ -22,31 +22,3 @@ resilience4j:
     configs:
       default:
         timeoutDuration: 10s
-
-spring:
-  cloud:
-    gateway:
-      default-filters:
-        - DeduplicateResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
-      globalcors:
-        corsConfigurations:
-          '[/**]':
-            allowedOriginPatterns:
-              - "*"
-            allowedMethods:
-              - GET
-              - POST
-              - PUT
-              - DELETE
-              - OPTIONS
-              - HEAD
-              - PATCH
-            allowedHeaders:
-              - "*"
-            exposedHeaders:
-              - Authorization
-              - X-Correlation-ID
-              - X-User-Email
-              - X-User-Roles
-            allowCredentials: true
-            maxAge: 3600
