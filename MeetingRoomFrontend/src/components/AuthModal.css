@@ -58,3 +58,20 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 1.5rem 1.15rem;
+    max-height: 94vh;
+    overflow-y: auto;
+  }
+
+  .auth-tabs {
+    margin-bottom: 1.15rem;
+  }
+
+  .auth-tab-btn {
+    padding: 0.5rem;
+    font-size: 0.85rem;
+  }
+}

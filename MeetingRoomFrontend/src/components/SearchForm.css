@@ -101,3 +101,36 @@
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+@media (max-width: 768px) {
+  .search-form-card {
+    padding: 1.25rem 1rem;
+    margin: -2.5rem 1rem 2.5rem 1rem;
+  }
+  
+  .search-form-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .btn-search {
+    grid-column: span 2;
+    margin-top: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .search-form-card {
+    margin: -2rem 0.75rem 2rem 0.75rem;
+    padding: 1rem 0.85rem;
+  }
+
+  .search-form-grid {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+
+  .btn-search {
+    grid-column: span 1;
+  }
+}

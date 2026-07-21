@@ -67,5 +67,31 @@
 @media (max-width: 900px) {
   .admin-grid {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-container {
+    padding: 0 1rem;
+    margin: 1.5rem auto 3.5rem auto;
+  }
+
+  .admin-form-card, .admin-table-card {
+    padding: 1.25rem 1rem;
+  }
+
+  .checkbox-group {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-container {
+    padding: 0 0.85rem;
+  }
+
+  .admin-form-card, .admin-table-card {
+    padding: 1rem 0.85rem;
   }
 }

@@ -29,8 +29,43 @@
 
 .room-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
-  gap: 1.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .room-grid-section {
+    padding: 0 1rem;
+    margin-bottom: 3.5rem;
+  }
+
+  .room-grid-header {
+    margin-bottom: 1.25rem;
+  }
+
+  .room-grid-title {
+    font-size: 1.25rem;
+  }
+
+  .room-count-badge {
+    font-size: 0.78rem;
+    padding: 0.25rem 0.6rem;
+  }
+
+  .empty-state {
+    padding: 2.5rem 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .room-grid-section {
+    padding: 0 0.85rem;
+  }
+
+  .room-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
 }
 
 .empty-state {
