@@ -2,12 +2,12 @@ spring:
   config:
     import: "optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}"
   datasource:
-    url: ${DB_URL:jdbc:postgresql://database-1-instance-1.c96i6y2g0vfl.eu-north-1.rds.amazonaws.com:5432/postgres?ssl=true&sslmode=require}
-    username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:database-1-instance-1.c96i6y2g0vfl.eu-north-1.rds.amazonaws.com:5432/?Action=connect&DBUser=postgres&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIASQVSE25T2YHX2PSQ%2F20260720%2Feu-north-1%2Frds-db%2Faws4_request&X-Amz-Date=20260720T084557Z&X-Amz-Expires=900&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCmV1LW5vcnRoLTEiRzBFAiEApk5JqOmzxnyuOSB1nyu6kOj0F3X9%2BiAc0OlqJMnzbaICIAKoVx1GesvUWQflcsnWxNjIpaJvQLIGCKf%2F1ShL%2B2IhKvoCCKL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQABoMMTczMjQ2MDQ0MDA3IgyJBTkWGrMg5Z6S7ygqzgJF7Lve11wFHDWk8DNLgEzT6zX1gGU7Qj%2BchXjFvCT09LY33IFSBAuOa41tqC4meM6ql5IcSr%2Fvg1ACQicZMeASPfccPrPJwgrr%2Bc7Q4nwZzabOOZuXXUeg73SB3t%2BANJ6pU%2FYFz00lU2EsDVJJGDpIKKTaxYs5rnrPIn248spJr91wplIqZabzNXfNZx2Joc8%2BbGsmuQftM77jJ4Ji2rsYaCgLjOsaBFbgZ1YLV8rdHWqUP41JKhBgvg3sdyAps616Hck6BsCxYHwPXaW2HEIFbfkV12ASifoFCUge9DeoP%2F9L22EwxvdxelAMCkotaJ71Q4NG%2Fm7c6fLUDPFy1s0EeFln1c12VQ9WhWsaRgzlON7k1nuKG7PRLLe4Ixu7YJerbC6DDSFE08qaKWlt0kpJi815KdP2hCOkWqhid1njLuIw%2F6zaEjsy1ULL998BMJrd9tIGOq0CcK7SsJe8DWodLgP%2BA7I4vJERP9tBK92DqOLptQcweFAjrQ2igodlROBS5TKgwRePWcADhYM5r847U1Fv3tIwQjYajMR6CXpRfwDuI%2F0VJ6yJn5NpD92niqj%2Bu2bMXKtCGSSt8FssnLJRahBffXKNeUVFjDneKxI6CuKx%2FWdOV7vCv1928jUnUy3qbDJrZcY0jFafJi0xDnP6uC86U6Z4nnI3%2B3pMaQ%2BGruJlqJofPGumO88Mf%2B3bEddvSAnmff4AO0qVljA1Kd3XL%2F1liXd%2Bnn5Yj3fyE2gxzD9LeS%2BaSS7ErWTMooD5gWfVNKcz1dYfVq2BATOq8PVhdbiazlEWm8mgsQywgsOldDiXWCw0ObjyRAn9S3%2BdL1LKOYGW%2FHZkkkZ96G2qL1YZIhotHA%3D3D&X-Amz-Signature=1deeb3ef32c6faea7499b6f636e81cc3b30d07bce989b24f6c72afeb6b523165&X-Amz-SignedHeaders=host}
-    driver-class-name: org.postgresql.Driver
+    url: jdbc:mysql://${RDS_ENDPOINT:database-1.c96i6y2g0vfl.eu-north-1.rds.amazonaws.com}:${RDS_PORT:3306}/${RDS_DB_NAME:mysql}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: ${RDS_USERNAME:admin}
+    password: ${RDS_PASSWORD:Meetingroom123}
+    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
       ddl-auto: update
     show-sql: false
