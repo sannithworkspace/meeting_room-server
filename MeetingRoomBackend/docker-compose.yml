@@ -43,6 +43,11 @@ services:
       - SPRING_PROFILES_ACTIVE=prod
       - EUREKA_SERVER_URL=http://admin:admin123@eureka-server:8761/eureka/
       - CONFIG_SERVER_URL=http://config-server:8888
+      - RDS_ENDPOINT=${RDS_ENDPOINT:-database-1-instance-1.c96i6y2g0vfl.eu-north-1.rds.amazonaws.com}
+      - RDS_PORT=${RDS_PORT:-5432}
+      - RDS_DB_NAME=${RDS_DB_NAME:-postgres}
+      - RDS_USERNAME=${RDS_USERNAME:-postgres}
+      - RDS_PASSWORD=${RDS_PASSWORD:-postgres}
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -73,6 +78,11 @@ services:
       - SPRING_PROFILES_ACTIVE=prod
       - EUREKA_SERVER_URL=http://admin:admin123@eureka-server:8761/eureka/
       - CONFIG_SERVER_URL=http://config-server:8888
+      - RDS_ENDPOINT=${RDS_ENDPOINT:-database-1-instance-1.c96i6y2g0vfl.eu-north-1.rds.amazonaws.com}
+      - RDS_PORT=${RDS_PORT:-5432}
+      - RDS_DB_NAME=${RDS_DB_NAME:-postgres}
+      - RDS_USERNAME=${RDS_USERNAME:-postgres}
+      - RDS_PASSWORD=${RDS_PASSWORD:-postgres}
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -88,6 +98,11 @@ services:
       - SPRING_PROFILES_ACTIVE=prod
       - EUREKA_SERVER_URL=http://admin:admin123@eureka-server:8761/eureka/
       - CONFIG_SERVER_URL=http://config-server:8888
+      - RDS_ENDPOINT=${RDS_ENDPOINT:-database-1-instance-1.c96i6y2g0vfl.eu-north-1.rds.amazonaws.com}
+      - RDS_PORT=${RDS_PORT:-5432}
+      - RDS_DB_NAME=${RDS_DB_NAME:-postgres}
+      - RDS_USERNAME=${RDS_USERNAME:-postgres}
+      - RDS_PASSWORD=${RDS_PASSWORD:-postgres}
     depends_on:
       eureka-server:
         condition: service_healthy
