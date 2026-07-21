@@ -41,8 +41,8 @@ services:
       - EUREKA_SERVER_URL=http://${EUREKA_USERNAME:-admin}:${EUREKA_PASSWORD:-admin123}@eureka-server:8761/eureka/
       - CONFIG_SERVER_URL=http://config-server:8888
       - RDS_ENDPOINT=${RDS_ENDPOINT}
-      - RDS_PORT=${RDS_PORT:-5432}
-      - RDS_DB_NAME=${RDS_DB_NAME:-postgres}
+      - RDS_PORT=${RDS_PORT:-3306}
+      - RDS_DB_NAME=${RDS_DB_NAME:-meetingroomdb}
       - RDS_USERNAME=${RDS_USERNAME}
       - RDS_PASSWORD=${RDS_PASSWORD}
     depends_on:
@@ -75,8 +75,8 @@ services:
       - EUREKA_SERVER_URL=http://${EUREKA_USERNAME:-admin}:${EUREKA_PASSWORD:-admin123}@eureka-server:8761/eureka/
       - CONFIG_SERVER_URL=http://config-server:8888
       - RDS_ENDPOINT=${RDS_ENDPOINT}
-      - RDS_PORT=${RDS_PORT:-5432}
-      - RDS_DB_NAME=${RDS_DB_NAME:-postgres}
+      - RDS_PORT=${RDS_PORT:-3306}
+      - RDS_DB_NAME=${RDS_DB_NAME:-meetingroomdb}
       - RDS_USERNAME=${RDS_USERNAME}
       - RDS_PASSWORD=${RDS_PASSWORD}
     depends_on:
@@ -94,8 +94,8 @@ services:
       - EUREKA_SERVER_URL=http://${EUREKA_USERNAME:-admin}:${EUREKA_PASSWORD:-admin123}@eureka-server:8761/eureka/
       - CONFIG_SERVER_URL=http://config-server:8888
       - RDS_ENDPOINT=${RDS_ENDPOINT}
-      - RDS_PORT=${RDS_PORT:-5432}
-      - RDS_DB_NAME=${RDS_DB_NAME:-postgres}
+      - RDS_PORT=${RDS_PORT:-3306}
+      - RDS_DB_NAME=${RDS_DB_NAME:-meetingroomdb}
       - RDS_USERNAME=${RDS_USERNAME}
       - RDS_PASSWORD=${RDS_PASSWORD}
     depends_on:
@@ -121,7 +121,7 @@ services:
     container_name: frontend
     restart: always
     ports:
-      - "80:80"
+      - "3000:80"
     depends_on:
       - api-gateway
 
