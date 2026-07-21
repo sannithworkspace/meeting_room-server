@@ -10,7 +10,7 @@ spring:
     config:
       server:
         native:
-          search-locations: classpath:/config-repo
+          search-locations: file:./config-repo,file:/app/config-repo,classpath:/config-repo
 
 eureka:
   instance:

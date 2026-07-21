@@ -28,6 +28,8 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=native
       - EUREKA_SERVER_URL=http://admin:admin123@eureka-server:8761/eureka/
+    volumes:
+      - ./config-server/src/main/resources/config-repo:/app/config-repo
     depends_on:
       eureka-server:
         condition: service_healthy
