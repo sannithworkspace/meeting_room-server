@@ -28,16 +28,43 @@ export const fetchUserUpcomingBookings = createAsyncThunk(
 
 export const cancelBooking = createAsyncThunk(
   'bookings/cancelBooking',
-  async (bookingId, { rejectWithValue, dispatch, getState }) => {
+  async ({ bookingId, reason }, { rejectWithValue, dispatch, getState }) => {
     try {
-      const response = await axiosClient.put(`/bookings/${bookingId}/cancel`);
+      const url = `/bookings/${bookingId}/cancel?reason=${encodeURIComponent(reason || '')}`;
+      const response = await axiosClient.put(url);
       const user = getState().auth.user;
       if (user?.fullName) {
         dispatch(fetchUserUpcomingBookings(user.fullName));
       }
+      dispatch(fetchBookingMetrics());
+      dispatch(fetchAllSystemBookings());
       return response.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || 'Failed to cancel booking');
+    }
+  }
+);
+
+export const fetchAllSystemBookings = createAsyncThunk(
+  'bookings/fetchAllSystemBookings',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axiosClient.get('/bookings/search?page=0&size=1000');
+      return response.data.data.content || [];
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || 'Failed to fetch all system bookings');
+    }
+  }
+);
+
+export const fetchBookingMetrics = createAsyncThunk(
+  'bookings/fetchBookingMetrics',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axiosClient.get('/bookings/metrics');
+      return response.data.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || 'Failed to fetch metrics');
     }
   }
 );
@@ -46,6 +73,8 @@ const bookingSlice = createSlice({
   name: 'bookings',
   initialState: {
     userBookings: [],
+    systemBookings: [],
+    metrics: null,
     lastConfirmedBooking: null,
     loading: false,
     error: null,
@@ -86,6 +115,30 @@ const bookingSlice = createSlice({
         state.userBookings = action.payload;
       })
       .addCase(fetchUserUpcomingBookings.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Fetch All System Bookings
+      .addCase(fetchAllSystemBookings.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchAllSystemBookings.fulfilled, (state, action) => {
+        state.loading = false;
+        state.systemBookings = action.payload;
+      })
+      .addCase(fetchAllSystemBookings.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Fetch Booking Metrics
+      .addCase(fetchBookingMetrics.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchBookingMetrics.fulfilled, (state, action) => {
+        state.loading = false;
+        state.metrics = action.payload;
+      })
+      .addCase(fetchBookingMetrics.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })

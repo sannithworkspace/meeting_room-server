@@ -42,6 +42,19 @@ export const createRoom = createAsyncThunk(
   }
 );
 
+export const updateRoom = createAsyncThunk(
+  'rooms/updateRoom',
+  async ({ roomId, roomData }, { rejectWithValue, dispatch }) => {
+    try {
+      const response = await axiosClient.put(`/rooms/${roomId}`, roomData);
+      dispatch(fetchAllRooms());
+      return response.data.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || 'Failed to update room');
+    }
+  }
+);
+
 export const deleteRoom = createAsyncThunk(
   'rooms/deleteRoom',
   async (roomId, { rejectWithValue, dispatch }) => {

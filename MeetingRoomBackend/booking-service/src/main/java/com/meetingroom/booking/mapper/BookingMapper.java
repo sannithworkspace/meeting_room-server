@@ -14,6 +14,7 @@ public interface BookingMapper {
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "roomName", ignore = true)
     @Mapping(target = "isDeleted", ignore = true)
+    @Mapping(target = "cancellationReason", ignore = true)
     MeetingBooking toEntity(BookingCreateRequest request);
 
     BookingResponse toResponse(MeetingBooking entity);

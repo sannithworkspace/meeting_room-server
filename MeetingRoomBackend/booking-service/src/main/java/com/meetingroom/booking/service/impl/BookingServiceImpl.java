@@ -6,7 +6,9 @@ import com.meetingroom.booking.constants.BookingConstants;
 import com.meetingroom.booking.dto.request.BookingCreateRequest;
 import com.meetingroom.booking.dto.response.ApiResponse;
 import com.meetingroom.booking.dto.response.BookingResponse;
+import com.meetingroom.booking.dto.response.BookingMetricsResponse;
 import com.meetingroom.booking.dto.response.PageResponse;
+import java.util.Map;
 import com.meetingroom.booking.entity.BookingStatus;
 import com.meetingroom.booking.entity.MeetingBooking;
 import com.meetingroom.booking.exception.BookingCollisionException;
@@ -98,21 +100,46 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional
-    public BookingResponse cancelBooking(Long id) {
-        log.info("Attempting to cancel booking ID: {}", id);
+    public BookingResponse cancelBooking(Long id, String reason) {
+        log.info("Attempting to cancel booking ID: {} with reason: {}", id, reason);
         MeetingBooking booking = findBookingById(id);
 
-        if (booking.getStatus() != BookingStatus.UPCOMING) {
+        if (booking.getStatus() != BookingStatus.UPCOMING && booking.getStatus() != BookingStatus.ONGOING) {
             String errorMsg = String.format(BookingConstants.CANNOT_CANCEL_NON_UPCOMING, booking.getStatus());
             log.warn("Cancellation rejected for booking ID {}: {}", id, errorMsg);
             throw new BusinessException(errorMsg);
         }
 
         booking.setStatus(BookingStatus.CANCELLED);
+        booking.setCancellationReason(reason != null && !reason.trim().isEmpty() ? reason : "Cancelled by user");
         MeetingBooking cancelledBooking = bookingRepository.save(booking);
 
         log.info("Booking ID: {} cancelled successfully. Room slot freed.", id);
         return bookingMapper.toResponse(cancelledBooking);
+    }
+
+    @Override
+    public BookingMetricsResponse getBookingMetrics() {
+        log.info("Fetching booking metrics for admin dashboard");
+        List<MeetingBooking> allBookings = bookingRepository.findAll();
+
+        long total = allBookings.size();
+        long upcoming = allBookings.stream().filter(b -> b.getStatus() == BookingStatus.UPCOMING).count();
+        long ongoing = allBookings.stream().filter(b -> b.getStatus() == BookingStatus.ONGOING).count();
+        long completed = allBookings.stream().filter(b -> b.getStatus() == BookingStatus.COMPLETED).count();
+        long cancelled = allBookings.stream().filter(b -> b.getStatus() == BookingStatus.CANCELLED).count();
+
+        Map<String, Long> roomUtilization = allBookings.stream()
+                .collect(Collectors.groupingBy(MeetingBooking::getRoomName, Collectors.counting()));
+
+        return BookingMetricsResponse.builder()
+                .totalBookings(total)
+                .upcomingBookings(upcoming)
+                .ongoingBookings(ongoing)
+                .completedBookings(completed)
+                .cancelledBookings(cancelled)
+                .roomUtilization(roomUtilization)
+                .build();
     }
 
     @Override

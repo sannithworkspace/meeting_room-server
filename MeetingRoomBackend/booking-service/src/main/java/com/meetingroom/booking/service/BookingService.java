@@ -11,13 +11,17 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
+import com.meetingroom.booking.dto.response.BookingMetricsResponse;
+
 public interface BookingService {
 
     BookingResponse createBooking(BookingCreateRequest request);
 
     BookingResponse getBookingById(Long id);
 
-    BookingResponse cancelBooking(Long id);
+    BookingResponse cancelBooking(Long id, String reason);
+
+    BookingMetricsResponse getBookingMetrics();
 
     PageResponse<BookingResponse> getEmployeeUpcomingBookings(String employeeName, Pageable pageable);
 

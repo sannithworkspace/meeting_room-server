@@ -57,10 +57,12 @@ const RoomCard = ({ room, onSelectRoom }) => {
           </div>
         </div>
 
-        <button className="btn-book-now" onClick={() => onSelectRoom(room)}>
-          <span>Book Room</span>
-          <ArrowRight size={16} />
-        </button>
+        {onSelectRoom && (
+          <button className="btn-book-now" onClick={() => onSelectRoom(room)}>
+            <span>Book Room</span>
+            <ArrowRight size={16} />
+          </button>
+        )}
       </div>
     </motion.div>
   );

@@ -12,6 +12,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 public class BookingServiceApplication {
 
+    // Trigger rebuild for CRUD, cancellation reasons, and dashboard metrics APIs
     public static void main(String[] args) {
         SpringApplication.run(BookingServiceApplication.class, args);
     }

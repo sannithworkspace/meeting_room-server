@@ -28,6 +28,7 @@ public class BookingResponse {
     private Integer numberOfParticipants;
     private String meetingDescription;
     private BookingStatus status;
+    private String cancellationReason;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

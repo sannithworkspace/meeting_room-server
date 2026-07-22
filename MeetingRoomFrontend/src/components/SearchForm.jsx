@@ -7,8 +7,36 @@ import { Calendar, Clock, Users, Search, Loader2 } from 'lucide-react';
 import './SearchForm.css';
 
 const validationSchema = Yup.object().shape({
-  date: Yup.string().required('Date is required'),
-  startTime: Yup.string().required('Start time is required'),
+  date: Yup.string()
+    .required('Date is required')
+    .test('not-past-date', 'Date cannot be in the past', (val) => {
+      if (!val) return true;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Correct for timezone offset when parsing yyyy-mm-dd
+      const [year, month, day] = val.split('-').map(Number);
+      const selected = new Date(year, month - 1, day);
+      selected.setHours(0, 0, 0, 0);
+      
+      return selected >= today;
+    }),
+  startTime: Yup.string()
+    .required('Start time is required')
+    .test('not-past-time', 'Start time cannot be in the past', function(startTime) {
+      const { date } = this.parent;
+      if (!date || !startTime) return true;
+      
+      const todayLocalStr = new Date().toLocaleDateString('en-CA'); // yyyy-mm-dd format in local time
+      if (date === todayLocalStr) {
+        const now = new Date();
+        const [hours, minutes] = startTime.split(':').map(Number);
+        const selectedTime = new Date();
+        selectedTime.setHours(hours, minutes, 0, 0);
+        return selectedTime > now;
+      }
+      return true;
+    }),
   endTime: Yup.string()
     .required('End time is required')
     .test('is-after', 'End time must be after start time', function(endTime) {
@@ -23,7 +51,7 @@ const SearchForm = () => {
   const dispatch = useDispatch();
   const { loading, searchParams } = useSelector((state) => state.rooms);
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = new Date().toLocaleDateString('en-CA');
 
   const formik = useFormik({
     initialValues: {

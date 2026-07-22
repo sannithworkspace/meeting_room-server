@@ -8,6 +8,7 @@ import ConfirmationModal from './components/ConfirmationModal';
 import BookingHistory from './components/BookingHistory';
 import AuthModal from './components/AuthModal';
 import AdminDashboard from './components/AdminDashboard';
+import OfficeSpaces from './components/OfficeSpaces';
 import { clearLastConfirmedBooking } from './redux/slices/bookingSlice';
 import './App.css';
 
@@ -49,6 +50,10 @@ function App() {
             <Hero />
             <RoomGrid onSelectRoom={(room) => setSelectedRoom(room)} />
           </>
+        )}
+
+        {activeTab === 'spaces' && (
+          <OfficeSpaces />
         )}
 
         {activeTab === 'my-bookings' && (

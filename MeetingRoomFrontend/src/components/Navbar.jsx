@@ -44,6 +44,14 @@ const Navbar = ({ activeTab, setActiveTab, onOpenAuth }) => {
             Explore Rooms
           </button>
 
+          <button
+            className={`nav-item ${activeTab === 'spaces' ? 'active' : ''}`}
+            onClick={() => handleNavClick('spaces')}
+          >
+            <Building2 size={16} style={{ transform: 'rotate(90deg)' }} />
+            Office Spaces
+          </button>
+
           {user && (
             <button
               className={`nav-item ${activeTab === 'my-bookings' ? 'active' : ''}`}

@@ -6,6 +6,7 @@ import com.meetingroom.booking.constants.BookingConstants;
 import com.meetingroom.booking.dto.request.BookingCreateRequest;
 import com.meetingroom.booking.dto.response.ApiResponse;
 import com.meetingroom.booking.dto.response.BookingResponse;
+import com.meetingroom.booking.dto.response.BookingMetricsResponse;
 import com.meetingroom.booking.dto.response.PageResponse;
 import com.meetingroom.booking.entity.BookingStatus;
 import com.meetingroom.booking.service.BookingService;
@@ -63,10 +64,21 @@ public class BookingController {
 
     @PutMapping("/{id}/cancel")
     @Operation(summary = "Cancel an upcoming booking and immediately free the room slot")
-    public ResponseEntity<ApiResponse<BookingResponse>> cancelBooking(@PathVariable Long id) {
-        log.info("REST request to cancel booking ID: {}", id);
-        BookingResponse response = bookingService.cancelBooking(id);
+    public ResponseEntity<ApiResponse<BookingResponse>> cancelBooking(
+            @PathVariable Long id,
+            @RequestParam(required = false) String reason
+    ) {
+        log.info("REST request to cancel booking ID: {} with reason: {}", id, reason);
+        BookingResponse response = bookingService.cancelBooking(id, reason);
         return ResponseEntity.ok(ApiResponse.success(response, BookingConstants.BOOKING_CANCELLED_SUCCESS));
+    }
+
+    @GetMapping("/metrics")
+    @Operation(summary = "Get bookings utilization metrics and status counts for dashboard")
+    public ResponseEntity<ApiResponse<BookingMetricsResponse>> getBookingMetrics() {
+        log.info("REST request to get dashboard booking metrics");
+        BookingMetricsResponse response = bookingService.getBookingMetrics();
+        return ResponseEntity.ok(ApiResponse.success(response, "Metrics fetched successfully"));
     }
 
     @GetMapping("/employee/{employeeName}/upcoming")

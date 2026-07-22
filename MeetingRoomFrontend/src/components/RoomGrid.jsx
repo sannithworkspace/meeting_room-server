@@ -15,22 +15,34 @@ const RoomGrid = ({ onSelectRoom }) => {
     }
   }, [dispatch, allRooms.length]);
 
-  const roomsToDisplay = searched ? availableRooms : allRooms;
+  if (!searched) {
+    return (
+      <section className="room-grid-section">
+        <div className="empty-state glass-panel">
+          <div className="empty-state-icon">
+            <Building2 size={32} />
+          </div>
+          <h3 className="empty-state-title">Find Available Rooms</h3>
+          <p className="empty-state-subtitle">
+            Enter your preferred meeting details in the form above to discover available rooms.
+          </p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="room-grid-section">
       <div className="room-grid-header">
-        <h2 className="room-grid-title">
-          {searched ? 'Available Meeting Rooms' : 'All Enterprise Meeting Rooms'}
-        </h2>
+        <h2 className="room-grid-title">Available Meeting Rooms</h2>
         <span className="room-count-badge">
-          {roomsToDisplay.length} Rooms {searched ? 'Available' : 'Total'}
+          {availableRooms.length} Rooms Available
         </span>
       </div>
 
-      {roomsToDisplay.length > 0 ? (
+      {availableRooms.length > 0 ? (
         <div className="room-grid">
-          {roomsToDisplay.map((room) => (
+          {availableRooms.map((room) => (
             <RoomCard key={room.id} room={room} onSelectRoom={onSelectRoom} />
           ))}
         </div>
@@ -39,11 +51,9 @@ const RoomGrid = ({ onSelectRoom }) => {
           <div className="empty-state-icon">
             <Frown size={32} />
           </div>
-          <h3 className="empty-state-title">No Rooms Found</h3>
+          <h3 className="empty-state-title">No Rooms Available</h3>
           <p className="empty-state-subtitle">
-            {searched
-              ? 'No rooms are free for your selected date, time slot, and capacity. Try adjusting your search filters.'
-              : 'No meeting rooms are registered yet. Ask an admin to create a new room.'}
+            No rooms match your search filters for this time slot. Try adjusting the date or capacity requirements.
           </p>
         </div>
       )}
