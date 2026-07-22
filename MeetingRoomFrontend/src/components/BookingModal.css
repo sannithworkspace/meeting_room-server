@@ -4,8 +4,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(10, 14, 23, 0.85);
-  backdrop-filter: blur(12px);
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(8px);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -18,12 +18,14 @@
   max-width: 580px;
   border-radius: var(--radius-lg);
   overflow: hidden;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-lg);
 }
 
 .modal-header {
   padding: 1.5rem 2rem;
-  border-bottom: 1px solid var(--border-glass);
+  border-bottom: 1px solid var(--border-light);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -33,6 +35,7 @@
   font-size: 1.25rem;
   font-weight: 800;
   color: var(--text-primary);
+  letter-spacing: -0.02em;
 }
 
 .btn-close-modal {
@@ -48,7 +51,7 @@
 }
 
 .btn-close-modal:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: #f1f5f9;
   color: var(--text-primary);
 }
 
@@ -62,8 +65,8 @@
 .room-summary-banner {
   padding: 1rem 1.25rem;
   border-radius: var(--radius-md);
-  background: rgba(6, 182, 212, 0.08);
-  border: 1px solid rgba(6, 182, 212, 0.2);
+  background: rgba(15, 98, 254, 0.05);
+  border: 1px solid rgba(15, 98, 254, 0.15);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -71,7 +74,7 @@
 
 .room-summary-name {
   font-weight: 700;
-  color: var(--accent-cyan);
+  color: var(--accent-blue);
 }
 
 .room-summary-meta {
@@ -82,7 +85,7 @@
 .btn-confirm-booking {
   width: 100%;
   height: 48px;
-  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
+  background: var(--accent-blue);
   color: #fff;
   font-weight: 700;
   font-size: 1rem;
@@ -91,14 +94,15 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  box-shadow: 0 4px 20px var(--accent-cyan-glow);
+  box-shadow: var(--accent-blue-glow);
   margin-top: 1rem;
   transition: var(--transition-fast);
 }
 
 .btn-confirm-booking:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 25px var(--accent-cyan-glow);
+  background: var(--accent-blue-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--accent-blue-glow);
 }
 
 .btn-confirm-booking:disabled {
@@ -109,10 +113,47 @@
 .modal-error-alert {
   padding: 0.85rem 1.25rem;
   border-radius: var(--radius-md);
-  background: rgba(244, 63, 94, 0.12);
-  border: 1px solid rgba(244, 63, 94, 0.3);
+  background: #fef2f2;
+  border: 1px solid #fee2e2;
   color: var(--accent-rose);
   font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* Modals general form inputs */
+.modal-body .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.modal-body .form-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.modal-body .form-control {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  background: #f8fafc;
+  border: 1px solid var(--border-light);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  transition: var(--transition-fast);
+}
+
+.modal-body .form-control:focus {
+  outline: none;
+  background: var(--bg-secondary);
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(15, 98, 254, 0.12);
+}
+
+.modal-body .form-error {
+  font-size: 0.75rem;
+  color: var(--accent-rose);
   font-weight: 600;
 }
 

@@ -1,27 +1,40 @@
 .admin-container {
   max-width: 1280px;
-  margin: 2rem auto 5rem auto;
-  padding: 0 1.5rem;
+  margin: 3rem auto 5rem auto;
+  padding: 0 2rem;
 }
 
 .admin-grid {
   display: grid;
   grid-template-columns: 360px 1fr;
-  gap: 2rem;
+  gap: 2.5rem;
   align-items: start;
 }
 
 .admin-form-card {
   padding: 1.75rem;
   border-radius: var(--radius-lg);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
 }
 
+.admin-form-card h2 {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
 .admin-table-card {
   padding: 1.75rem;
   border-radius: var(--radius-lg);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
 }
 
 .admin-table {
@@ -31,16 +44,22 @@
 }
 
 .admin-table th, .admin-table td {
-  padding: 0.85rem 1rem;
+  padding: 1rem 1.25rem;
   text-align: left;
-  border-bottom: 1px solid var(--border-glass);
+  border-bottom: 1px solid var(--border-light);
 }
 
 .admin-table th {
   color: var(--text-secondary);
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background-color: #f8fafc;
+}
+
+.admin-table tr:hover td {
+  background-color: #f8fafc;
 }
 
 .admin-table td {
@@ -62,9 +81,44 @@
   font-size: 0.8rem;
   color: var(--text-secondary);
   cursor: pointer;
+  font-weight: 600;
 }
 
-@media (max-width: 900px) {
+/* Modals/forms validation inputs within Admin dashboard */
+.admin-form-card .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.admin-form-card .form-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.admin-form-card .form-control {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  background: #f8fafc;
+  border: 1px solid var(--border-light);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  transition: var(--transition-fast);
+}
+
+.admin-form-card .form-control:focus {
+  outline: none;
+  background: var(--bg-secondary);
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(15, 98, 254, 0.12);
+}
+
+@media (max-width: 992px) {
   .admin-grid {
     grid-template-columns: 1fr;
     gap: 1.5rem;

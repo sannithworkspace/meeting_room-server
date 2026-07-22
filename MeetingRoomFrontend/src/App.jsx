@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
-import SearchForm from './components/SearchForm';
 import RoomGrid from './components/RoomGrid';
 import BookingModal from './components/BookingModal';
 import ConfirmationModal from './components/ConfirmationModal';
@@ -15,7 +14,6 @@ import './App.css';
 function App() {
   const [activeTab, setActiveTab] = useState('explore'); // 'explore' | 'my-bookings' | 'admin'
   const [selectedRoom, setSelectedRoom] = useState(null);
-  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const dispatch = useDispatch();
   const { lastConfirmedBooking, bookingSuccess } = useSelector((state) => state.bookings);
@@ -32,19 +30,23 @@ function App() {
     setActiveTab('my-bookings');
   };
 
+  // Enforce login redirection lock: if user is not authenticated, show only the Auth page
+  if (!user) {
+    return <AuthModal onClose={() => {}} />;
+  }
+
   return (
     <div className="app-container">
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        onOpenAuth={() => setShowAuthModal(true)}
+        onOpenAuth={() => {}}
       />
 
       <main className="app-main">
         {activeTab === 'explore' && (
           <>
             <Hero />
-            <SearchForm />
             <RoomGrid onSelectRoom={(room) => setSelectedRoom(room)} />
           </>
         )}
@@ -63,10 +65,7 @@ function App() {
         <BookingModal
           room={selectedRoom}
           onClose={() => setSelectedRoom(null)}
-          onOpenAuth={() => {
-            setSelectedRoom(null);
-            setShowAuthModal(true);
-          }}
+          onOpenAuth={() => setSelectedRoom(null)}
         />
       )}
 
@@ -76,11 +75,6 @@ function App() {
           booking={lastConfirmedBooking}
           onClose={handleCloseConfirmation}
         />
-      )}
-
-      {/* Auth Modal (Login / Signup) */}
-      {showAuthModal && (
-        <AuthModal onClose={() => setShowAuthModal(false)} />
       )}
 
       <footer>
