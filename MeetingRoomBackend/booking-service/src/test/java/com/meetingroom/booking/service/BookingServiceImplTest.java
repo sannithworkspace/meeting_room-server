@@ -146,7 +146,7 @@ class BookingServiceImplTest {
         when(bookingRepository.save(meetingBooking)).thenReturn(meetingBooking);
         when(bookingMapper.toResponse(meetingBooking)).thenReturn(bookingResponse);
 
-        BookingResponse response = bookingService.cancelBooking(100L);
+        BookingResponse response = bookingService.cancelBooking(100L, "Test cancel reason");
 
         assertNotNull(response);
         verify(bookingRepository).save(meetingBooking);
@@ -159,6 +159,6 @@ class BookingServiceImplTest {
         meetingBooking.setStatus(BookingStatus.COMPLETED);
         when(bookingRepository.findByIdAndIsDeletedFalse(100L)).thenReturn(Optional.of(meetingBooking));
 
-        assertThrows(BusinessException.class, () -> bookingService.cancelBooking(100L));
+        assertThrows(BusinessException.class, () -> bookingService.cancelBooking(100L, "Test cancel reason"));
     }
 }
