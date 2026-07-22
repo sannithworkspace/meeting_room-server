@@ -23,6 +23,7 @@ const AdminDashboard = () => {
   const [adminTab, setAdminTab] = useState('rooms'); // 'rooms' | 'bookings' | 'reports'
   const [editingRoomId, setEditingRoomId] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
   
   // Modal states for cancellation
   const [cancellingBooking, setCancellingBooking] = useState(null); // booking object
@@ -56,17 +57,49 @@ const AdminDashboard = () => {
         imageUrls: values.imageUrls ? [values.imageUrls] : []
       };
 
-      if (editingRoomId) {
-        const result = await dispatch(updateRoom({ roomId: editingRoomId, roomData }));
-        if (updateRoom.fulfilled.match(result)) {
-          setEditingRoomId(null);
-          resetForm();
+      setUploadingImage(true);
+      try {
+        if (editingRoomId) {
+          const result = await dispatch(updateRoom({ roomId: editingRoomId, roomData }));
+          if (updateRoom.fulfilled.match(result)) {
+            // Upload to S3 if a file was selected
+            if (selectedFile) {
+              const formData = new FormData();
+              formData.append('file', selectedFile);
+              await axiosClient.post(`/rooms/${editingRoomId}/image`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+              });
+            }
+            setEditingRoomId(null);
+            setSelectedFile(null);
+            const fileInput = document.getElementById('room-image-upload-input');
+            if (fileInput) fileInput.value = '';
+            resetForm();
+            dispatch(fetchAllRooms());
+          }
+        } else {
+          const result = await dispatch(createRoom(roomData));
+          if (createRoom.fulfilled.match(result)) {
+            const createdRoom = result.payload;
+            // Upload S3 image using the new room's ID!
+            if (selectedFile && createdRoom && createdRoom.id) {
+              const formData = new FormData();
+              formData.append('file', selectedFile);
+              await axiosClient.post(`/rooms/${createdRoom.id}/image`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+              });
+            }
+            setSelectedFile(null);
+            const fileInput = document.getElementById('room-image-upload-input');
+            if (fileInput) fileInput.value = '';
+            resetForm();
+            dispatch(fetchAllRooms());
+          }
         }
-      } else {
-        const result = await dispatch(createRoom(roomData));
-        if (createRoom.fulfilled.match(result)) {
-          resetForm();
-        }
+      } catch (err) {
+        console.error("Failed to save room details or upload image", err);
+      } finally {
+        setUploadingImage(false);
       }
     }
   });
@@ -254,24 +287,23 @@ const AdminDashboard = () => {
                 value={formik.values.imageUrls}
                 onChange={formik.handleChange}
               />
-              {editingRoomId && (
-                <div style={{ marginTop: '0.65rem' }}>
-                  <label className="form-label" style={{ fontSize: '0.78rem', fontWeight: 600 }}>Or Upload Image to AWS S3:</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    disabled={uploadingImage}
-                    className="form-control"
-                    style={{ padding: '0.4rem', fontSize: '0.85rem' }}
-                  />
-                  {uploadingImage && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: 'var(--accent-blue)', fontSize: '0.78rem', fontWeight: 700, marginTop: '0.35rem' }}>
-                      <Loader2 className="spinner-icon" size={12} /> Uploading file to Sweden S3 bucket...
-                    </div>
-                  )}
-                </div>
-              )}
+              <div style={{ marginTop: '0.65rem' }}>
+                <label className="form-label" style={{ fontSize: '0.78rem', fontWeight: 600 }}><ImageIcon size={12} /> Or Upload Local Image (AWS S3):</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setSelectedFile(e.target.files[0])}
+                  disabled={uploadingImage}
+                  className="form-control"
+                  style={{ padding: '0.4rem', fontSize: '0.85rem' }}
+                  id="room-image-upload-input"
+                />
+                {uploadingImage && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: 'var(--accent-blue)', fontSize: '0.78rem', fontWeight: 700, marginTop: '0.35rem' }}>
+                    <Loader2 className="spinner-icon" size={12} /> Processing AWS S3 image upload...
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="form-group">
