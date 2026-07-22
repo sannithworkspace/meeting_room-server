@@ -8,6 +8,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 @EnableDiscoveryClient
 public class RoomServiceApplication {
 
+    // Trigger rebuild for S3 image upload and config client parameters
     public static void main(String[] args) {
         SpringApplication.run(RoomServiceApplication.class, args);
     }

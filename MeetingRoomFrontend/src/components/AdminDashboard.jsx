@@ -5,6 +5,7 @@ import * as Yup from 'yup';
 import { createRoom, updateRoom, deleteRoom, fetchAllRooms } from '../redux/slices/roomSlice';
 import { fetchAllSystemBookings, fetchBookingMetrics, cancelBooking } from '../redux/slices/bookingSlice';
 import { ShieldCheck, Plus, Edit, Trash2, Building, Users, Image as ImageIcon, Loader2, Calendar, PieChart, Download, AlertTriangle, X, Info } from 'lucide-react';
+import axiosClient from '../api/axiosClient';
 import './AdminDashboard.css';
 
 const roomSchema = Yup.object().shape({
@@ -21,6 +22,7 @@ const AdminDashboard = () => {
 
   const [adminTab, setAdminTab] = useState('rooms'); // 'rooms' | 'bookings' | 'reports'
   const [editingRoomId, setEditingRoomId] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   
   // Modal states for cancellation
   const [cancellingBooking, setCancellingBooking] = useState(null); // booking object
@@ -110,6 +112,31 @@ const AdminDashboard = () => {
     const result = await dispatch(cancelBooking({ bookingId: cancellingBooking.id, reason: cancelReason }));
     if (cancelBooking.fulfilled.match(result)) {
       setCancellingBooking(null);
+    }
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !editingRoomId) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    setUploadingImage(true);
+
+    try {
+      const response = await axiosClient.post(`/rooms/${editingRoomId}/image`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      if (response.data.success) {
+        dispatch(fetchAllRooms());
+        formik.setFieldValue('imageUrls', response.data.data.imageUrls[0]);
+      }
+    } catch (err) {
+      console.error("Upload to S3 failed", err);
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -227,6 +254,24 @@ const AdminDashboard = () => {
                 value={formik.values.imageUrls}
                 onChange={formik.handleChange}
               />
+              {editingRoomId && (
+                <div style={{ marginTop: '0.65rem' }}>
+                  <label className="form-label" style={{ fontSize: '0.78rem', fontWeight: 600 }}>Or Upload Image to AWS S3:</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={uploadingImage}
+                    className="form-control"
+                    style={{ padding: '0.4rem', fontSize: '0.85rem' }}
+                  />
+                  {uploadingImage && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: 'var(--accent-blue)', fontSize: '0.78rem', fontWeight: 700, marginTop: '0.35rem' }}>
+                      <Loader2 className="spinner-icon" size={12} /> Uploading file to Sweden S3 bucket...
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="form-group">

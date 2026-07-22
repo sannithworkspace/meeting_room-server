@@ -18,7 +18,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -47,6 +49,17 @@ public class RoomController {
         RoomResponse response = roomService.createRoom(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(response, RoomConstants.ROOM_CREATED_SUCCESS));
+    }
+
+    @PostMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Upload image file for meeting room to AWS S3 and save URL in database")
+    public ResponseEntity<ApiResponse<RoomResponse>> uploadRoomImage(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file
+    ) {
+        log.info("REST request to upload image for room ID: {}", id);
+        RoomResponse response = roomService.uploadRoomImage(id, file);
+        return ResponseEntity.ok(ApiResponse.success(response, "Room image uploaded and saved successfully"));
     }
 
     @PutMapping("/{id}")

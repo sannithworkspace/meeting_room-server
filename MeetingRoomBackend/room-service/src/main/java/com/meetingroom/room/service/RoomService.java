@@ -9,9 +9,13 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.Set;
 
+import org.springframework.web.multipart.MultipartFile;
+
 public interface RoomService {
 
     RoomResponse createRoom(RoomCreateRequest request);
+
+    RoomResponse uploadRoomImage(Long id, MultipartFile file);
 
     RoomResponse updateRoom(Long id, RoomUpdateRequest request);
 

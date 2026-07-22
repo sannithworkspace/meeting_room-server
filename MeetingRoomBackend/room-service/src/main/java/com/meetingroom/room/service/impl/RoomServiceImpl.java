@@ -12,6 +12,8 @@ import com.meetingroom.room.exception.ResourceNotFoundException;
 import com.meetingroom.room.mapper.RoomMapper;
 import com.meetingroom.room.repository.MeetingRoomRepository;
 import com.meetingroom.room.service.RoomService;
+import com.meetingroom.room.service.S3Service;
+import org.springframework.web.multipart.MultipartFile;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +35,7 @@ public class RoomServiceImpl implements RoomService {
 
     private final MeetingRoomRepository roomRepository;
     private final RoomMapper roomMapper;
+    private final S3Service s3Service;
 
     @Override
     @Transactional
@@ -49,6 +52,24 @@ public class RoomServiceImpl implements RoomService {
         MeetingRoom savedRoom = roomRepository.save(room);
 
         log.info("Meeting room created successfully with ID: {}", savedRoom.getId());
+        return roomMapper.toResponse(savedRoom);
+    }
+
+    @Override
+    @Transactional
+    public RoomResponse uploadRoomImage(Long id, MultipartFile file) {
+        log.info("Uploading image for meeting room ID: {}", id);
+        MeetingRoom room = findRoomById(id);
+        
+        // Upload file to AWS S3
+        String s3Url = s3Service.uploadFile(file);
+        
+        // Clear previous images and save the new S3 URL
+        room.getImageUrls().clear();
+        room.getImageUrls().add(s3Url);
+        
+        MeetingRoom savedRoom = roomRepository.save(room);
+        log.info("Room ID: {} image updated with S3 URL: {}", id, s3Url);
         return roomMapper.toResponse(savedRoom);
     }
 
