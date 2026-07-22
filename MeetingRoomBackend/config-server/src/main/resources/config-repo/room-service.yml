@@ -12,7 +12,7 @@ spring:
 
 aws:
   s3:
-    access-key: ${AWS_ACCESS_KEY}
-    secret-key: ${AWS_SECRET_KEY}
+    access-key: ${AWS_ACCESS_KEY:}
+    secret-key: ${AWS_SECRET_KEY:}
     bucket-name: ${AWS_S3_BUCKET:meeting-room-s3bucket}
     region: ${AWS_S3_REGION:eu-north-1}

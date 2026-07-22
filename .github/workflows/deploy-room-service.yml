@@ -65,4 +65,6 @@ jobs:
               -e RDS_DB_NAME="${{ secrets.RDS_DB_NAME }}" \
               -e RDS_USERNAME="${{ secrets.RDS_USERNAME }}" \
               -e RDS_PASSWORD="${{ secrets.RDS_PASSWORD }}" \
+              -e AWS_ACCESS_KEY="${{ secrets.AWS_ACCESS_KEY }}" \
+              -e AWS_SECRET_KEY="${{ secrets.AWS_SECRET_KEY }}" \
               ${{ secrets.DOCKER_HUB_USERNAME }}/meetingroom-room-service:latest

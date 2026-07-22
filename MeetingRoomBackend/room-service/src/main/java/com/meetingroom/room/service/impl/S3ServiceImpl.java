@@ -27,9 +27,19 @@ public class S3ServiceImpl implements S3Service {
     @Value("${aws.s3.region}")
     private String region;
 
+    @Value("${aws.s3.access-key}")
+    private String accessKey;
+
     @Override
     public String uploadFile(MultipartFile file) {
         log.info("Uploading multipart file '{}' to S3 bucket: {}", file.getOriginalFilename(), bucketName);
+
+        boolean customCredentialsSet = accessKey != null && !accessKey.trim().isEmpty();
+        boolean standardEnvCredentialsSet = System.getenv("AWS_ACCESS_KEY_ID") != null || System.getProperty("aws.accessKeyId") != null;
+
+        if (!customCredentialsSet && !standardEnvCredentialsSet) {
+            throw new BusinessException("AWS S3 credentials are not configured. Please supply AWS_ACCESS_KEY and AWS_SECRET_KEY as custom properties, or AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables.");
+        }
 
         if (file.isEmpty()) {
             throw new BusinessException("Cannot upload an empty file");
