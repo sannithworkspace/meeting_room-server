@@ -79,6 +79,19 @@ export const resetPassword = createAsyncThunk(
   }
 );
 
+export const resendActivationOtp = createAsyncThunk(
+  'auth/resendActivationOtp',
+  async (email, { rejectWithValue }) => {
+    try {
+      const response = await axiosClient.post(`/auth/resend-activation-otp?email=${encodeURIComponent(email)}`);
+      return response.data.message;
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Failed to send activation code.';
+      return rejectWithValue(msg);
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState: {
@@ -168,6 +181,18 @@ const authSlice = createSlice({
         state.loading = false;
       })
       .addCase(resetPassword.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Resend Activation OTP
+      .addCase(resendActivationOtp.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(resendActivationOtp.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(resendActivationOtp.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

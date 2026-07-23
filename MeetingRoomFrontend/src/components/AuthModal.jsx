@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { motion, AnimatePresence } from 'framer-motion';
-import { loginUser, registerUser, verifyOtp, forgotPassword, resetPassword, clearAuthError } from '../redux/slices/authSlice';
+import { loginUser, registerUser, verifyOtp, forgotPassword, resetPassword, resendActivationOtp, clearAuthError } from '../redux/slices/authSlice';
 import { Mail, Lock, User, Briefcase, LogIn, UserPlus, Loader2, CheckCircle2, Building2 } from 'lucide-react';
 import './AuthModal.css';
 
@@ -20,7 +20,7 @@ const registerSchema = Yup.object().shape({
 });
 
 const AuthModal = ({ onClose }) => {
-  const [tab, setTab] = useState('login'); // 'login' | 'register' | 'otp' | 'forgot' | 'reset'
+  const [tab, setTab] = useState('login'); // 'login' | 'register' | 'otp' | 'forgot' | 'reset' | 'resend-otp'
   const [registeredEmail, setRegisteredEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [verificationSuccess, setVerificationSuccess] = useState(false);
@@ -30,6 +30,7 @@ const AuthModal = ({ onClose }) => {
   const [resetOtp, setResetOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [activationEmail, setActivationEmail] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
   const dispatch = useDispatch();
@@ -129,6 +130,25 @@ const AuthModal = ({ onClose }) => {
     }
   };
 
+  const handleResendActivationOtp = async (e) => {
+    e.preventDefault();
+    if (!activationEmail || !/\S+@\S+\.\S+/.test(activationEmail)) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+    dispatch(clearAuthError());
+    const result = await dispatch(resendActivationOtp(activationEmail));
+    if (resendActivationOtp.fulfilled.match(result)) {
+      setSuccessMsg("Activation OTP code sent to your email!");
+      setRegisteredEmail(activationEmail);
+      setTimeout(() => {
+        setSuccessMsg("");
+        setTab('otp');
+        dispatch(clearAuthError());
+      }, 2000);
+    }
+  };
+
   return (
     <div className="auth-page-container">
       {/* Left Column: Visual Video Banner */}
@@ -172,7 +192,9 @@ const AuthModal = ({ onClose }) => {
                       ? 'Forgot Password' 
                       : tab === 'reset' 
                         ? 'Reset Password' 
-                        : 'Verify Email'}
+                        : tab === 'resend-otp'
+                          ? 'Activate Account'
+                          : 'Verify Email'}
               </h2>
               <p>
                 {tab === 'login' 
@@ -183,7 +205,9 @@ const AuthModal = ({ onClose }) => {
                       ? 'Enter your email to request a reset code'
                       : tab === 'reset'
                         ? 'Enter the code and your new password'
-                        : 'Enter the code sent to your email'}
+                        : tab === 'resend-otp'
+                          ? 'Enter your email to receive an activation code'
+                          : 'Enter the code sent to your email'}
               </p>
             </div>
 
@@ -245,22 +269,41 @@ const AuthModal = ({ onClose }) => {
                 <div className="form-group">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                     <label className="form-label" style={{ margin: 0 }}><Lock size={14} /> Password</label>
-                    <button 
-                      type="button" 
-                      style={{ 
-                        background: 'none', 
-                        border: 'none', 
-                        color: '#3b82f6', 
-                        cursor: 'pointer', 
-                        fontSize: '13px', 
-                        fontWeight: '500',
-                        textDecoration: 'underline',
-                        padding: 0
-                      }}
-                      onClick={() => { setTab('forgot'); dispatch(clearAuthError()); }}
-                    >
-                      Forgot Password?
-                    </button>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                      <button 
+                        type="button" 
+                        style={{ 
+                          background: 'none', 
+                          border: 'none', 
+                          color: '#3b82f6', 
+                          cursor: 'pointer', 
+                          fontSize: '12px', 
+                          fontWeight: '500',
+                          textDecoration: 'underline',
+                          padding: 0
+                        }}
+                        onClick={() => { setTab('resend-otp'); dispatch(clearAuthError()); }}
+                      >
+                        Activate Account
+                      </button>
+                      <span style={{ color: '#cbd5e1', fontSize: '12px' }}>|</span>
+                      <button 
+                        type="button" 
+                        style={{ 
+                          background: 'none', 
+                          border: 'none', 
+                          color: '#3b82f6', 
+                          cursor: 'pointer', 
+                          fontSize: '12px', 
+                          fontWeight: '500',
+                          textDecoration: 'underline',
+                          padding: 0
+                        }}
+                        onClick={() => { setTab('forgot'); dispatch(clearAuthError()); }}
+                      >
+                        Forgot Password?
+                      </button>
+                    </div>
                   </div>
                   <input
                     type="password"
@@ -470,6 +513,51 @@ const AuthModal = ({ onClose }) => {
                     <>
                       <CheckCircle2 size={18} />
                       Reset Password
+                    </>
+                  )}
+                </button>
+
+                <button 
+                  type="button"
+                  className="btn-auth-back"
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#64748b',
+                    width: '100%',
+                    marginTop: '15px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    textDecoration: 'underline'
+                  }}
+                  onClick={() => { setTab('login'); dispatch(clearAuthError()); }}
+                >
+                  Back to Sign In
+                </button>
+              </form>
+            ) : tab === 'resend-otp' ? (
+              <form onSubmit={handleResendActivationOtp}>
+                <div className="form-group">
+                  <label className="form-label"><Mail size={14} /> Email Address</label>
+                  <input
+                    type="email"
+                    placeholder="name@company.com"
+                    className="form-control"
+                    value={activationEmail}
+                    onChange={(e) => setActivationEmail(e.target.value)}
+                  />
+                </div>
+
+                <button type="submit" className="btn-auth-submit" disabled={loading || !activationEmail}>
+                  {loading ? (
+                    <>
+                      <Loader2 className="spinner-icon" size={18} />
+                      Sending Code...
+                    </>
+                  ) : (
+                    <>
+                      <Mail size={18} />
+                      Send Activation Code
                     </>
                   )}
                 </button>

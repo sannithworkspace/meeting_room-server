@@ -67,4 +67,12 @@ public class AuthController {
         authService.resetPassword(email, otp, newPassword);
         return ResponseEntity.ok(ApiResponse.success("Password reset successfully"));
     }
+
+    @PostMapping("/resend-activation-otp")
+    @Operation(summary = "Resend account activation OTP code to user's email")
+    public ResponseEntity<ApiResponse<Void>> resendActivationOtp(@org.springframework.web.bind.annotation.RequestParam String email) {
+        log.info("REST request to resend activation OTP for: {}", email);
+        authService.resendActivationOtp(email);
+        return ResponseEntity.ok(ApiResponse.success("Activation verification code resent successfully"));
+    }
 }

@@ -147,4 +147,36 @@ public class AuthServiceImpl implements AuthService {
         }
         throw new BusinessException("User not found with email: " + email, HttpStatus.NOT_FOUND);
     }
+
+    @Override
+    public void resendActivationOtp(String email) {
+        log.info("Processing resend activation OTP request for email: {}", email);
+        UserResponse user = findUserByEmail(email);
+
+        if (user.getIsActive() != null && user.getIsActive()) {
+            throw new BusinessException("Account is already active. Please sign in.", HttpStatus.BAD_REQUEST);
+        }
+
+        // Generate new OTP code using the existing user-service OTP generation endpoint
+        ApiResponse<String> otpResponse = userServiceClient.generateResetOtp(email);
+        if (otpResponse == null || !otpResponse.isSuccess() || otpResponse.getData() == null) {
+            throw new BusinessException("Failed to generate account verification code", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        String otp = otpResponse.getData();
+
+        // Send OTP email with "ACTIVATION" type via notification-service
+        com.meetingroom.auth.dto.request.OtpRequest otpRequest = com.meetingroom.auth.dto.request.OtpRequest.builder()
+                .email(user.getEmail())
+                .fullName(user.getFullName())
+                .otp(otp)
+                .type("ACTIVATION")
+                .build();
+        
+        try {
+            notificationClient.sendOtp(otpRequest);
+            log.info("Resent account activation OTP notification successfully for user: {}", email);
+        } catch (Exception ex) {
+            log.error("Failed to invoke notification-service for resending activation OTP mail", ex);
+        }
+    }
 }
