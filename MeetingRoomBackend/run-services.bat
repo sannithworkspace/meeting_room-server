@@ -6,8 +6,8 @@ title MeetingRoom Services Launcher
 :: Set local SMTP credentials for email delivery
 set SMTP_HOST=smtp.gmail.com
 set SMTP_PORT=587
-set SMTP_USERNAME=sannithanalluri2003@gmail.com
-set SMTP_PASSWORD=zlih wqqc mnpb lebu
+set SMTP_USERNAME=sannithnalluri2003@gmail.com
+set SMTP_PASSWORD=zlihwqqcmnpblebu
 
 echo ============================================================
 echo   Meeting Room Enterprise Microservices Platform Launcher

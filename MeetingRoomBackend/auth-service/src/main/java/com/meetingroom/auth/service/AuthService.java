@@ -10,4 +10,8 @@ public interface AuthService {
     JwtAuthResponse login(LoginRequest request);
 
     Map<String, Object> validateToken(String token);
+
+    void forgotPassword(String email);
+
+    void resetPassword(String email, String otp, String newPassword);
 }

@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { motion, AnimatePresence } from 'framer-motion';
-import { loginUser, registerUser, verifyOtp, clearAuthError } from '../redux/slices/authSlice';
+import { loginUser, registerUser, verifyOtp, forgotPassword, resetPassword, clearAuthError } from '../redux/slices/authSlice';
 import { Mail, Lock, User, Briefcase, LogIn, UserPlus, Loader2, CheckCircle2, Building2 } from 'lucide-react';
 import './AuthModal.css';
 
@@ -20,10 +20,18 @@ const registerSchema = Yup.object().shape({
 });
 
 const AuthModal = ({ onClose }) => {
-  const [tab, setTab] = useState('login'); // 'login' | 'register' | 'otp'
+  const [tab, setTab] = useState('login'); // 'login' | 'register' | 'otp' | 'forgot' | 'reset'
   const [registeredEmail, setRegisteredEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [verificationSuccess, setVerificationSuccess] = useState(false);
+  
+  // Forgot password flow states
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetOtp, setResetOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+
   const dispatch = useDispatch();
   const { loading, error, registerSuccess } = useSelector((state) => state.auth);
 
@@ -74,6 +82,53 @@ const AuthModal = ({ onClose }) => {
     }
   };
 
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    if (!resetEmail || !/\S+@\S+\.\S+/.test(resetEmail)) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+    dispatch(clearAuthError());
+    const result = await dispatch(forgotPassword(resetEmail));
+    if (forgotPassword.fulfilled.match(result)) {
+      setSuccessMsg("Verification OTP code sent to your email!");
+      setTimeout(() => {
+        setSuccessMsg("");
+        setTab('reset');
+        dispatch(clearAuthError());
+      }, 2000);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    if (resetOtp.length !== 6) {
+      alert("Please enter a valid 6-digit OTP code.");
+      return;
+    }
+    if (newPassword.length < 6) {
+      alert("Password must be at least 6 characters.");
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      alert("Passwords do not match.");
+      return;
+    }
+    dispatch(clearAuthError());
+    const result = await dispatch(resetPassword({ email: resetEmail, otp: resetOtp, newPassword }));
+    if (resetPassword.fulfilled.match(result)) {
+      setSuccessMsg("Password reset successfully! Redirecting to Sign In...");
+      setTimeout(() => {
+        setSuccessMsg("");
+        setTab('login');
+        loginFormik.setFieldValue('email', resetEmail);
+        setResetOtp('');
+        setNewPassword('');
+        setConfirmNewPassword('');
+      }, 2500);
+    }
+  };
+
   return (
     <div className="auth-page-container">
       {/* Left Column: Visual Video Banner */}
@@ -108,17 +163,31 @@ const AuthModal = ({ onClose }) => {
             transition={{ duration: 0.25 }}
           >
             <div className="auth-form-header">
-              <h2>{tab === 'login' ? 'Welcome Back' : tab === 'register' ? 'Create Account' : 'Verify Email'}</h2>
+              <h2>
+                {tab === 'login' 
+                  ? 'Welcome Back' 
+                  : tab === 'register' 
+                    ? 'Create Account' 
+                    : tab === 'forgot' 
+                      ? 'Forgot Password' 
+                      : tab === 'reset' 
+                        ? 'Reset Password' 
+                        : 'Verify Email'}
+              </h2>
               <p>
                 {tab === 'login' 
                   ? 'Please log in to manage your bookings' 
                   : tab === 'register' 
                     ? 'Get access to meeting spaces instantly' 
-                    : 'Enter the code sent to your email'}
+                    : tab === 'forgot'
+                      ? 'Enter your email to request a reset code'
+                      : tab === 'reset'
+                        ? 'Enter the code and your new password'
+                        : 'Enter the code sent to your email'}
               </p>
             </div>
 
-            {tab !== 'otp' && (
+            {(tab === 'login' || tab === 'register') && (
               <div className="auth-tabs">
                 <button
                   className={`auth-tab-btn ${tab === 'login' ? 'active' : ''}`}
@@ -149,6 +218,12 @@ const AuthModal = ({ onClose }) => {
               </div>
             )}
 
+            {successMsg && (
+              <div className="auth-success-alert">
+                <CheckCircle2 size={16} /> {successMsg}
+              </div>
+            )}
+
             {tab === 'login' ? (
               <form onSubmit={loginFormik.handleSubmit}>
                 <div className="form-group">
@@ -168,7 +243,25 @@ const AuthModal = ({ onClose }) => {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label"><Lock size={14} /> Password</label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <label className="form-label" style={{ margin: 0 }}><Lock size={14} /> Password</label>
+                    <button 
+                      type="button" 
+                      style={{ 
+                        background: 'none', 
+                        border: 'none', 
+                        color: '#3b82f6', 
+                        cursor: 'pointer', 
+                        fontSize: '13px', 
+                        fontWeight: '500',
+                        textDecoration: 'underline',
+                        padding: 0
+                      }}
+                      onClick={() => { setTab('forgot'); dispatch(clearAuthError()); }}
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
                   <input
                     type="password"
                     name="password"
@@ -271,6 +364,132 @@ const AuthModal = ({ onClose }) => {
                       Register Account
                     </>
                   )}
+                </button>
+              </form>
+            ) : tab === 'forgot' ? (
+              <form onSubmit={handleForgotPassword}>
+                <div className="form-group">
+                  <label className="form-label"><Mail size={14} /> Email Address</label>
+                  <input
+                    type="email"
+                    name="resetEmail"
+                    placeholder="name@company.com"
+                    className="form-control"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                  />
+                </div>
+
+                <button type="submit" className="btn-auth-submit" disabled={loading || !resetEmail}>
+                  {loading ? (
+                    <>
+                      <Loader2 className="spinner-icon" size={18} />
+                      Sending Code...
+                    </>
+                  ) : (
+                    <>
+                      <Mail size={18} />
+                      Request Reset Code
+                    </>
+                  )}
+                </button>
+
+                <button 
+                  type="button"
+                  className="btn-auth-back"
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#64748b',
+                    width: '100%',
+                    marginTop: '15px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    textDecoration: 'underline'
+                  }}
+                  onClick={() => { setTab('login'); dispatch(clearAuthError()); }}
+                >
+                  Back to Sign In
+                </button>
+              </form>
+            ) : tab === 'reset' ? (
+              <form onSubmit={handleResetPassword}>
+                <div className="form-group" style={{ textAlign: 'center', marginBottom: '16px' }}>
+                  <p style={{ fontSize: '14px', color: '#475569', lineHeight: 1.5, marginBottom: '10px' }}>
+                    Enter the 6-digit code sent to <strong style={{ color: '#0f172a' }}>{resetEmail}</strong>:
+                  </p>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    placeholder="000000"
+                    className="form-control"
+                    style={{ 
+                      fontSize: '20px', 
+                      letterSpacing: '6px', 
+                      textAlign: 'center', 
+                      width: '180px', 
+                      margin: '5px auto', 
+                      fontWeight: 'bold',
+                      color: '#0f172a',
+                      borderBottom: '2px solid #3b82f6'
+                    }}
+                    value={resetOtp}
+                    onChange={(e) => setResetOtp(e.target.value.replace(/\D/g, ''))}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label"><Lock size={14} /> New Password</label>
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    className="form-control"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label"><Lock size={14} /> Confirm Password</label>
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    className="form-control"
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                  />
+                </div>
+
+                <button type="submit" className="btn-auth-submit" disabled={loading || resetOtp.length !== 6 || !newPassword || newPassword !== confirmNewPassword}>
+                  {loading ? (
+                    <>
+                      <Loader2 className="spinner-icon" size={18} />
+                      Resetting Password...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 size={18} />
+                      Reset Password
+                    </>
+                  )}
+                </button>
+
+                <button 
+                  type="button"
+                  className="btn-auth-back"
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#64748b',
+                    width: '100%',
+                    marginTop: '15px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    textDecoration: 'underline'
+                  }}
+                  onClick={() => { setTab('login'); dispatch(clearAuthError()); }}
+                >
+                  Back to Sign In
                 </button>
               </form>
             ) : (

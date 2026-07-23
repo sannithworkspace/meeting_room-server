@@ -15,4 +15,14 @@ public interface UserServiceClient {
 
     @PostMapping("/register")
     ApiResponse<UserResponse> registerUser(@RequestBody Object registerRequest);
+
+    @PostMapping("/generate-reset-otp")
+    ApiResponse<String> generateResetOtp(@org.springframework.web.bind.annotation.RequestParam("email") String email);
+
+    @PostMapping("/reset-password")
+    ApiResponse<Void> resetPassword(
+            @org.springframework.web.bind.annotation.RequestParam("email") String email,
+            @org.springframework.web.bind.annotation.RequestParam("otp") String otp,
+            @org.springframework.web.bind.annotation.RequestParam("encodedPassword") String encodedPassword
+    );
 }

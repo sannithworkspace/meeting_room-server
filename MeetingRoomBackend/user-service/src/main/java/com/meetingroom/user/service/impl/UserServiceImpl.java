@@ -157,4 +157,47 @@ public class UserServiceImpl implements UserService {
 
         log.info("User account with email '{}' verified and activated successfully!", email);
     }
+
+    @Override
+    @Transactional
+    public String generateResetOtp(String email) {
+        log.info("Generating password reset OTP for user email: {}", email);
+        UserEntity user = userRepository.findByEmailIgnoreCaseAndIsDeletedFalse(email)
+                .orElseThrow(() -> new ResourceNotFoundException(String.format("User not found with email: %s", email)));
+
+        // Generate 6-digit OTP
+        String otp = String.format("%06d", new java.util.Random().nextInt(999999));
+        user.setVerificationOtp(otp);
+        user.setOtpExpiry(java.time.LocalDateTime.now().plusMinutes(10));
+        userRepository.save(user);
+
+        log.info("Password reset OTP generated successfully for user {}: {}", email, otp);
+        return otp;
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(String email, String otp, String encodedPassword) {
+        log.info("Resetting password using OTP for user email: {}", email);
+        UserEntity user = userRepository.findByEmailIgnoreCaseAndIsDeletedFalse(email)
+                .orElseThrow(() -> new ResourceNotFoundException(String.format("User not found with email: %s", email)));
+
+        if (user.getVerificationOtp() == null || !user.getVerificationOtp().equals(otp)) {
+            log.warn("Password reset failed: Invalid OTP code provided for email '{}'", email);
+            throw new BusinessException("Invalid verification OTP code.");
+        }
+
+        if (user.getOtpExpiry() == null || user.getOtpExpiry().isBefore(java.time.LocalDateTime.now())) {
+            log.warn("Password reset failed: OTP code has expired for email '{}'", email);
+            throw new BusinessException("Verification OTP code has expired. Please try again.");
+        }
+
+        user.setPassword(encodedPassword);
+        user.setIsActive(true); // Ensure user is active if they reset password
+        user.setVerificationOtp(null);
+        user.setOtpExpiry(null);
+        userRepository.save(user);
+
+        log.info("Password reset completed successfully for user '{}'", email);
+    }
 }

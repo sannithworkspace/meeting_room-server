@@ -51,6 +51,34 @@ export const verifyOtp = createAsyncThunk(
   }
 );
 
+export const forgotPassword = createAsyncThunk(
+  'auth/forgotPassword',
+  async (email, { rejectWithValue }) => {
+    try {
+      const response = await axiosClient.post(`/auth/forgot-password?email=${encodeURIComponent(email)}`);
+      return response.data.message;
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Failed to send reset code.';
+      return rejectWithValue(msg);
+    }
+  }
+);
+
+export const resetPassword = createAsyncThunk(
+  'auth/resetPassword',
+  async ({ email, otp, newPassword }, { rejectWithValue }) => {
+    try {
+      const response = await axiosClient.post(
+        `/auth/reset-password?email=${encodeURIComponent(email)}&otp=${encodeURIComponent(otp)}&newPassword=${encodeURIComponent(newPassword)}`
+      );
+      return response.data.message;
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Password reset failed.';
+      return rejectWithValue(msg);
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState: {
@@ -116,6 +144,30 @@ const authSlice = createSlice({
         state.loading = false;
       })
       .addCase(verifyOtp.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Forgot Password
+      .addCase(forgotPassword.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(forgotPassword.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(forgotPassword.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Reset Password
+      .addCase(resetPassword.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(resetPassword.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(resetPassword.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

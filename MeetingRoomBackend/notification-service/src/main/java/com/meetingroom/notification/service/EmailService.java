@@ -7,10 +7,13 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+
+import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @Service
@@ -24,22 +27,35 @@ public class EmailService {
 
     @Async("emailExecutor")
     public void sendOtpEmail(OtpRequest request) {
-        log.info("Starting asynchronous email delivery for OTP verification to user: {}", request.getEmail());
-        String subject = "Verify Your Account - MeetingRoom OTP Code";
+        log.info("Starting asynchronous email delivery for OTP verification [{}] to user: {}", request.getType(), request.getEmail());
+        
+        String subject;
+        String title;
+        String desc;
+        
+        if ("PASSWORD_RESET".equalsIgnoreCase(request.getType())) {
+            subject = "Reset Your Password - MeetingRoom OTP Code";
+            title = "Password Reset Request";
+            desc = "We received a request to reset your password on the Meeting Room Booking Platform. Please use the verification code below to complete the reset:";
+        } else {
+            subject = "Verify Your Account - MeetingRoom OTP Code";
+            title = "Account Verification";
+            desc = "Thank you for signing up on the Meeting Room Booking Platform. Please use the verification code below to complete your registration:";
+        }
         
         String htmlContent = String.format(
                 "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; background-color: #ffffff;'>" +
-                "  <h2 style='color: #0f172a; text-align: center; margin-bottom: 24px;'>Account Verification</h2>" +
+                "  <h2 style='color: #0f172a; text-align: center; margin-bottom: 24px;'>%s</h2>" +
                 "  <p style='font-size: 16px; color: #334155;'>Hello <strong>%s</strong>,</p>" +
-                "  <p style='font-size: 15px; color: #334155; line-height: 1.5;'>Thank you for signing up on the Meeting Room Booking Platform. Please use the verification code below to complete your registration:</p>" +
+                "  <p style='font-size: 15px; color: #334155; line-height: 1.5;'>%s</p>" +
                 "  <div style='text-align: center; margin: 30px 0;'>" +
                 "    <span style='font-size: 32px; font-weight: bold; letter-spacing: 4px; color: #3b82f6; background-color: #eff6ff; padding: 12px 30px; border-radius: 6px; border: 1px dashed #bfdbfe;'>%s</span>" +
                 "  </div>" +
-                "  <p style='font-size: 13px; color: #64748b;'>This OTP code is valid for 10 minutes. If you did not request this verification, please ignore this email.</p>" +
+                "  <p style='font-size: 13px; color: #64748b;'>This OTP code is valid for 10 minutes. If you did not request this, please ignore this email.</p>" +
                 "  <hr style='border: none; border-top: 1px solid #f1f5f9; margin: 24px 0;'/>" +
                 "  <p style='font-size: 12px; color: #94a3b8; text-align: center;'>MeetingRoom Microservices Platform &copy; 2026</p>" +
                 "</div>",
-                request.getFullName(), request.getOtp()
+                title, request.getFullName(), desc, request.getOtp()
         );
 
         sendHtmlEmail(request.getEmail(), subject, htmlContent);
@@ -98,7 +114,13 @@ public class EmailService {
                 request.getStartTime(), request.getEndTime(), additionalDetails
         );
 
-        sendHtmlEmail(request.getEmployeeEmail(), subject, htmlContent);
+        // Attach iCalendar invite for confirmed bookings only (non-cancellation)
+        String icsContent = null;
+        if (!request.isCancellation()) {
+            icsContent = generateIcsContent(request);
+        }
+
+        sendHtmlEmailWithCalendar(request.getEmployeeEmail(), subject, htmlContent, icsContent);
     }
 
     @Async("emailExecutor")
@@ -130,6 +152,10 @@ public class EmailService {
     }
 
     private void sendHtmlEmail(String toEmail, String subject, String htmlContent) {
+        sendHtmlEmailWithCalendar(toEmail, subject, htmlContent, null);
+    }
+
+    private void sendHtmlEmailWithCalendar(String toEmail, String subject, String htmlContent, String icsContent) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -138,11 +164,46 @@ public class EmailService {
             helper.setTo(toEmail);
             helper.setSubject(subject);
             helper.setText(htmlContent, true);
+
+            if (icsContent != null && !icsContent.trim().isEmpty()) {
+                helper.addAttachment(
+                        "invite.ics", 
+                        new ByteArrayResource(icsContent.getBytes(StandardCharsets.UTF_8)), 
+                        "text/calendar"
+                );
+            }
             
             mailSender.send(message);
-            log.info("Email sent successfully to {}", toEmail);
+            log.info("Email sent successfully to {} (Calendar attachment: {})", toEmail, icsContent != null);
         } catch (Exception ex) {
             log.error("Failed to send email to {} with subject '{}'", toEmail, subject, ex);
         }
+    }
+
+    private String generateIcsContent(BookingNotificationRequest request) {
+        // Format: bookingDate = YYYY-MM-DD, startTime/endTime = HH:mm or HH:mm:ss
+        String dateStr = request.getBookingDate().replace("-", ""); // YYYYMMDD
+        
+        String startStr = request.getStartTime().replace(":", "");  // HHmmss
+        if (startStr.length() == 4) startStr += "00";
+        if (startStr.length() > 6) startStr = startStr.substring(0, 6);
+        
+        String endStr = request.getEndTime().replace(":", "");      // HHmmss
+        if (endStr.length() == 4) endStr += "00";
+        if (endStr.length() > 6) endStr = endStr.substring(0, 6);
+
+        return "BEGIN:VCALENDAR\r\n" +
+               "VERSION:2.0\r\n" +
+               "PRODID:-//MeetingRoom//Scheduling//EN\r\n" +
+               "BEGIN:VEVENT\r\n" +
+               "UID:booking-" + request.getBookingId() + "@meetingroom.com\r\n" +
+               "DTSTAMP:" + dateStr + "T000000Z\r\n" +
+               "DTSTART:" + dateStr + "T" + startStr + "\r\n" +
+               "DTEND:" + dateStr + "T" + endStr + "\r\n" +
+               "SUMMARY:" + request.getMeetingTitle() + "\r\n" +
+               "DESCRIPTION:Meeting Room reservation in room: " + request.getRoomName() + "\r\n" +
+               "LOCATION:" + request.getRoomName() + "\r\n" +
+               "END:VEVENT\r\n" +
+               "END:VCALENDAR";
     }
 }

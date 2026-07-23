@@ -47,4 +47,24 @@ public class AuthController {
         Map<String, Object> validation = authService.validateToken(authHeader);
         return ResponseEntity.ok(ApiResponse.success(validation, "Token validation completed"));
     }
+
+    @PostMapping("/forgot-password")
+    @Operation(summary = "Generate and send reset password OTP code to user's email")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(@org.springframework.web.bind.annotation.RequestParam String email) {
+        log.info("REST request to generate password reset email for: {}", email);
+        authService.forgotPassword(email);
+        return ResponseEntity.ok(ApiResponse.success("Reset verification code sent successfully"));
+    }
+
+    @PostMapping("/reset-password")
+    @Operation(summary = "Reset password using OTP verification code")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(
+            @org.springframework.web.bind.annotation.RequestParam String email,
+            @org.springframework.web.bind.annotation.RequestParam String otp,
+            @org.springframework.web.bind.annotation.RequestParam String newPassword
+    ) {
+        log.info("REST request to reset password for: {}", email);
+        authService.resetPassword(email, otp, newPassword);
+        return ResponseEntity.ok(ApiResponse.success("Password reset successfully"));
+    }
 }

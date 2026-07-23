@@ -103,4 +103,24 @@ public class UserController {
         userService.verifyOtp(email, otp);
         return ResponseEntity.ok(ApiResponse.success("Account activated successfully"));
     }
+
+    @PostMapping("/generate-reset-otp")
+    @Operation(summary = "Generate password reset OTP (Internal)")
+    public ResponseEntity<ApiResponse<String>> generateResetOtp(@RequestParam String email) {
+        log.info("REST request to generate password reset OTP for: {}", email);
+        String otp = userService.generateResetOtp(email);
+        return ResponseEntity.ok(ApiResponse.success(otp, "Reset OTP generated successfully"));
+    }
+
+    @PostMapping("/reset-password")
+    @Operation(summary = "Reset password using OTP (Internal)")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(
+            @RequestParam String email,
+            @RequestParam String otp,
+            @RequestParam String encodedPassword
+    ) {
+        log.info("REST request to reset password for: {}", email);
+        userService.resetPassword(email, otp, encodedPassword);
+        return ResponseEntity.ok(ApiResponse.success("Password reset successfully"));
+    }
 }

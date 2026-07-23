@@ -1,7 +1,5 @@
-package com.meetingroom.notification.dto.request;
+package com.meetingroom.auth.dto.request;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,15 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OtpRequest {
-    @NotBlank(message = "Email is required")
-    @Email(message = "Invalid email format")
     private String email;
-
-    @NotBlank(message = "OTP is required")
     private String otp;
-
-    @NotBlank(message = "Full name is required")
     private String fullName;
-
     private String type; // e.g. "ACTIVATION" or "PASSWORD_RESET"
 }

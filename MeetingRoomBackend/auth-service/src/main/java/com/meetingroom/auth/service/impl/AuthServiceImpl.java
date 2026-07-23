@@ -1,5 +1,6 @@
 package com.meetingroom.auth.service.impl;
 
+import com.meetingroom.auth.client.NotificationClient;
 import com.meetingroom.auth.client.UserResponse;
 import com.meetingroom.auth.client.UserServiceClient;
 import com.meetingroom.auth.dto.request.LoginRequest;
@@ -26,6 +27,7 @@ import java.util.Map;
 public class AuthServiceImpl implements AuthService {
 
     private final UserServiceClient userServiceClient;
+    private final NotificationClient notificationClient;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
 
@@ -87,5 +89,62 @@ public class AuthServiceImpl implements AuthService {
             log.error("Failed to fetch user details for email: {}", email, ex);
         }
         throw new BusinessException("Invalid email or password", HttpStatus.UNAUTHORIZED);
+    }
+
+    @Override
+    public void forgotPassword(String email) {
+        log.info("Processing forgot password request for email: {}", email);
+        UserResponse user = findUserByEmail(email);
+
+        // Generate reset OTP from user-service
+        ApiResponse<String> otpResponse = userServiceClient.generateResetOtp(email);
+        if (otpResponse == null || !otpResponse.isSuccess() || otpResponse.getData() == null) {
+            throw new BusinessException("Failed to generate password reset verification code", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        String otp = otpResponse.getData();
+
+        // Send OTP email via notification-service
+        com.meetingroom.auth.dto.request.OtpRequest otpRequest = com.meetingroom.auth.dto.request.OtpRequest.builder()
+                .email(user.getEmail())
+                .fullName(user.getFullName())
+                .otp(otp)
+                .type("PASSWORD_RESET")
+                .build();
+        
+        try {
+            notificationClient.sendOtp(otpRequest);
+            log.info("Forgot password OTP notification request sent successfully for user: {}", email);
+        } catch (Exception ex) {
+            log.error("Failed to invoke notification-service for forgot password OTP mail", ex);
+        }
+    }
+
+    @Override
+    public void resetPassword(String email, String otp, String newPassword) {
+        log.info("Processing reset password request for email: {}", email);
+        
+        if (newPassword == null || newPassword.trim().length() < 6) {
+            throw new BusinessException("Password must be at least 6 characters long", HttpStatus.BAD_REQUEST);
+        }
+
+        String encodedPassword = passwordEncoder.encode(newPassword);
+        ApiResponse<Void> resetResponse = userServiceClient.resetPassword(email, otp, encodedPassword);
+        if (resetResponse == null || !resetResponse.isSuccess()) {
+            String msg = (resetResponse != null) ? resetResponse.getMessage() : "Password reset failed";
+            throw new BusinessException(msg, HttpStatus.BAD_REQUEST);
+        }
+        log.info("Password reset completed successfully in auth-service for user: {}", email);
+    }
+
+    private UserResponse findUserByEmail(String email) {
+        try {
+            ApiResponse<UserResponse> response = userServiceClient.getUserByEmail(email);
+            if (response != null && response.isSuccess() && response.getData() != null) {
+                return response.getData();
+            }
+        } catch (Exception ex) {
+            log.error("Failed to find user details for email: {}", email, ex);
+        }
+        throw new BusinessException("User not found with email: " + email, HttpStatus.NOT_FOUND);
     }
 }
