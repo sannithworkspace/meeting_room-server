@@ -19,4 +19,6 @@ public interface UserService {
     PageResponse<UserResponse> getAllUsers(Pageable pageable);
 
     void deleteUser(Long id);
+
+    void verifyOtp(String email, String otp);
 }

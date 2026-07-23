@@ -32,6 +32,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final com.meetingroom.user.client.NotificationClient notificationClient;
 
     @Override
     @Transactional
@@ -45,10 +46,28 @@ public class UserServiceImpl implements UserService {
         UserEntity user = userMapper.toEntity(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRoles(Set.of(Role.ROLE_EMPLOYEE));
-        user.setIsActive(true);
+        user.setIsActive(false); // Inactive until verified by OTP
+
+        // Generate 6-digit verification OTP
+        String otp = String.valueOf((int) (Math.random() * 900000) + 100000);
+        user.setVerificationOtp(otp);
+        user.setOtpExpiry(java.time.LocalDateTime.now().plusMinutes(10));
 
         UserEntity savedUser = userRepository.save(user);
-        log.info("Employee registered successfully with ID: {}", savedUser.getId());
+        log.info("Employee registered successfully as INACTIVE with ID: {}. Generated OTP: {}", savedUser.getId(), otp);
+
+        // Async notify using notification-service Feign Client
+        try {
+            notificationClient.sendOtp(com.meetingroom.user.client.request.OtpRequest.builder()
+                    .email(savedUser.getEmail())
+                    .fullName(savedUser.getFullName())
+                    .otp(otp)
+                    .build());
+            log.info("Queued OTP email notification request successfully for user: {}", savedUser.getEmail());
+        } catch (Exception ex) {
+            log.error("Failed to invoke notification-service for user registration OTP mail", ex);
+        }
+
         return userMapper.toResponse(savedUser);
     }
 
@@ -107,5 +126,35 @@ public class UserServiceImpl implements UserService {
 
         userRepository.delete(user);
         log.info("User ID: {} marked as deleted", id);
+    }
+
+    @Override
+    @Transactional
+    public void verifyOtp(String email, String otp) {
+        log.info("Verifying OTP for user email: {}", email);
+        UserEntity user = userRepository.findByEmailIgnoreCaseAndIsDeletedFalse(email)
+                .orElseThrow(() -> new ResourceNotFoundException(String.format("User not found with email: %s", email)));
+
+        if (user.getIsActive()) {
+            log.info("User account with email '{}' is already active.", email);
+            return;
+        }
+
+        if (user.getVerificationOtp() == null || !user.getVerificationOtp().equals(otp)) {
+            log.warn("OTP verification failed: Invalid OTP code provided for email '{}'", email);
+            throw new BusinessException("Invalid verification OTP code.");
+        }
+
+        if (user.getOtpExpiry() == null || user.getOtpExpiry().isBefore(java.time.LocalDateTime.now())) {
+            log.warn("OTP verification failed: OTP code has expired for email '{}'", email);
+            throw new BusinessException("Verification OTP code has expired. Please register again.");
+        }
+
+        user.setIsActive(true);
+        user.setVerificationOtp(null);
+        user.setOtpExpiry(null);
+        userRepository.save(user);
+
+        log.info("User account with email '{}' verified and activated successfully!", email);
     }
 }

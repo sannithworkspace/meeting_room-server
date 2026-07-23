@@ -14,13 +14,17 @@ param (
     [string]$RDSPort = "5432",
     [string]$RDSDBName = "postgres",
     [string]$RDSUser = "postgres",
-    [string]$RDSPassword
+    [string]$RDSPassword,
+    [string]$SmtpHost = "smtp.gmail.com",
+    [string]$SmtpPort = "587",
+    [string]$SmtpUser,
+    [string]$SmtpPassword
 )
 
-if (-not $DockerHubUser -or -not $DockerHubToken -or -not $EC2Host -or -not $EC2KeyPath -or -not $RDSEndpoint -or -not $RDSPassword) {
+if (-not $DockerHubUser -or -not $DockerHubToken -or -not $EC2Host -or -not $EC2KeyPath -or -not $RDSEndpoint -or -not $RDSPassword -or -not $SmtpUser -or -not $SmtpPassword) {
     Write-Host "Error: Mandatory parameters missing!" -ForegroundColor Red
     Write-Host "Usage example:" -ForegroundColor Yellow
-    Write-Host ".\setup-github-secrets.ps1 -DockerHubUser 'myuser' -DockerHubToken 'dckr_pat_...' -EC2Host '54.210.x.x' -EC2KeyPath 'C:\keys\id_rsa' -RDSEndpoint 'db.rds.amazonaws.com' -RDSPassword 'dbpass123'"
+    Write-Host ".\setup-github-secrets.ps1 -DockerHubUser 'myuser' -DockerHubToken 'dckr_pat_...' -EC2Host '54.210.x.x' -EC2KeyPath 'C:\keys\id_rsa' -RDSEndpoint 'db.rds.amazonaws.com' -RDSPassword 'dbpass123' -SmtpUser 'my-gmail@gmail.com' -SmtpPassword 'abcd efgh ijkl mnop'"
     exit 1
 }
 
@@ -41,5 +45,9 @@ gh secret set RDS_PORT --body "$RDSPort"
 gh secret set RDS_DB_NAME --body "$RDSDBName"
 gh secret set RDS_USERNAME --body "$RDSUser"
 gh secret set RDS_PASSWORD --body "$RDSPassword"
+gh secret set SMTP_HOST --body "$SmtpHost"
+gh secret set SMTP_PORT --body "$SmtpPort"
+gh secret set SMTP_USERNAME --body "$SmtpUser"
+gh secret set SMTP_PASSWORD --body "$SmtpPassword"
 
-Write-Host "ALL 12 GITHUB SECRETS CONFIGURED SUCCESSFULLY IN A SINGLE GO!" -ForegroundColor Green
+Write-Host "ALL 16 GITHUB SECRETS CONFIGURED SUCCESSFULLY IN A SINGLE GO!" -ForegroundColor Green

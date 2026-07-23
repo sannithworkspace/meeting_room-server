@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { motion, AnimatePresence } from 'framer-motion';
-import { loginUser, registerUser, clearAuthError } from '../redux/slices/authSlice';
+import { loginUser, registerUser, verifyOtp, clearAuthError } from '../redux/slices/authSlice';
 import { Mail, Lock, User, Briefcase, LogIn, UserPlus, Loader2, CheckCircle2, Building2 } from 'lucide-react';
 import './AuthModal.css';
 
@@ -20,7 +20,10 @@ const registerSchema = Yup.object().shape({
 });
 
 const AuthModal = ({ onClose }) => {
-  const [tab, setTab] = useState('login'); // 'login' | 'register'
+  const [tab, setTab] = useState('login'); // 'login' | 'register' | 'otp'
+  const [registeredEmail, setRegisteredEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [verificationSuccess, setVerificationSuccess] = useState(false);
   const dispatch = useDispatch();
   const { loading, error, registerSuccess } = useSelector((state) => state.auth);
 
@@ -43,13 +46,33 @@ const AuthModal = ({ onClose }) => {
       dispatch(clearAuthError());
       const result = await dispatch(registerUser(values));
       if (registerUser.fulfilled.match(result)) {
+        setRegisteredEmail(values.email);
         setTimeout(() => {
-          setTab('login');
-          loginFormik.setFieldValue('email', values.email);
-        }, 1500);
+          setTab('otp');
+          dispatch(clearAuthError());
+        }, 1000);
       }
     }
   });
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    if (otp.length !== 6) {
+      alert("Please enter a valid 6-digit OTP code.");
+      return;
+    }
+    dispatch(clearAuthError());
+    const result = await dispatch(verifyOtp({ email: registeredEmail, otp }));
+    if (verifyOtp.fulfilled.match(result)) {
+      setVerificationSuccess(true);
+      setTimeout(() => {
+        setVerificationSuccess(false);
+        setTab('login');
+        loginFormik.setFieldValue('email', registeredEmail);
+        setOtp('');
+      }, 2000);
+    }
+  };
 
   return (
     <div className="auth-page-container">
@@ -85,30 +108,44 @@ const AuthModal = ({ onClose }) => {
             transition={{ duration: 0.25 }}
           >
             <div className="auth-form-header">
-              <h2>{tab === 'login' ? 'Welcome Back' : 'Create Account'}</h2>
-              <p>{tab === 'login' ? 'Please log in to manage your bookings' : 'Get access to meeting spaces instantly'}</p>
+              <h2>{tab === 'login' ? 'Welcome Back' : tab === 'register' ? 'Create Account' : 'Verify Email'}</h2>
+              <p>
+                {tab === 'login' 
+                  ? 'Please log in to manage your bookings' 
+                  : tab === 'register' 
+                    ? 'Get access to meeting spaces instantly' 
+                    : 'Enter the code sent to your email'}
+              </p>
             </div>
 
-            <div className="auth-tabs">
-              <button
-                className={`auth-tab-btn ${tab === 'login' ? 'active' : ''}`}
-                onClick={() => { setTab('login'); dispatch(clearAuthError()); }}
-              >
-                Sign In
-              </button>
-              <button
-                className={`auth-tab-btn ${tab === 'register' ? 'active' : ''}`}
-                onClick={() => { setTab('register'); dispatch(clearAuthError()); }}
-              >
-                Sign Up
-              </button>
-            </div>
+            {tab !== 'otp' && (
+              <div className="auth-tabs">
+                <button
+                  className={`auth-tab-btn ${tab === 'login' ? 'active' : ''}`}
+                  onClick={() => { setTab('login'); dispatch(clearAuthError()); }}
+                >
+                  Sign In
+                </button>
+                <button
+                  className={`auth-tab-btn ${tab === 'register' ? 'active' : ''}`}
+                  onClick={() => { setTab('register'); dispatch(clearAuthError()); }}
+                >
+                  Sign Up
+                </button>
+              </div>
+            )}
 
             {error && <div className="auth-error-alert">{error}</div>}
             
-            {registerSuccess && (
+            {registerSuccess && tab === 'register' && (
               <div className="auth-success-alert">
-                <CheckCircle2 size={16} /> Employee registered! Switching to Sign In...
+                <CheckCircle2 size={16} /> Account created! Redirecting to verification...
+              </div>
+            )}
+
+            {verificationSuccess && (
+              <div className="auth-success-alert">
+                <CheckCircle2 size={16} /> Account activated successfully! Redirecting to login...
               </div>
             )}
 
@@ -160,7 +197,7 @@ const AuthModal = ({ onClose }) => {
                   )}
                 </button>
               </form>
-            ) : (
+            ) : tab === 'register' ? (
               <form onSubmit={registerFormik.handleSubmit}>
                 <div className="form-group">
                   <label className="form-label"><User size={14} /> Full Name</label>
@@ -234,6 +271,66 @@ const AuthModal = ({ onClose }) => {
                       Register Account
                     </>
                   )}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleVerifyOtp}>
+                <div className="form-group" style={{ textAlign: 'center', marginBottom: '24px' }}>
+                  <p style={{ fontSize: '14px', color: '#475569', lineHeight: 1.5, marginBottom: '20px' }}>
+                    We have sent a 6-digit verification code to <strong style={{ color: '#0f172a' }}>{registeredEmail}</strong>.<br/>
+                    Please check your inbox and enter the code below:
+                  </p>
+                  
+                  <input
+                    type="text"
+                    maxLength={6}
+                    placeholder="000000"
+                    className="form-control"
+                    style={{ 
+                      fontSize: '24px', 
+                      letterSpacing: '8px', 
+                      textAlign: 'center', 
+                      width: '200px', 
+                      margin: '10px auto', 
+                      fontWeight: 'bold',
+                      color: '#0f172a',
+                      borderBottom: '2px solid #3b82f6'
+                    }}
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                  />
+                </div>
+
+                <button type="submit" className="btn-auth-submit" disabled={loading || otp.length !== 6}>
+                  {loading ? (
+                    <>
+                      <Loader2 className="spinner-icon" size={18} />
+                      Verifying Code...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 size={18} />
+                      Verify & Activate
+                    </>
+                  )}
+                </button>
+                
+                <button 
+                  type="button"
+                  className="btn-auth-back"
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#64748b',
+                    width: '100%',
+                    marginTop: '15px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    textDecoration: 'underline'
+                  }}
+                  onClick={() => { setTab('register'); dispatch(clearAuthError()); }}
+                >
+                  Back to Registration
                 </button>
               </form>
             )}

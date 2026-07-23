@@ -40,6 +40,7 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
     private static final List<String> PUBLIC_ENDPOINTS = List.of(
             "/auth/**",
             "/users/register",
+            "/users/verify-otp",
             "/fallback/**",
             "/swagger-ui/**",
             "/swagger-ui.html",

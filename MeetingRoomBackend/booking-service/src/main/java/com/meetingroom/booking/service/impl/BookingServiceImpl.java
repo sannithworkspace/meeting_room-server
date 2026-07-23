@@ -46,6 +46,7 @@ public class BookingServiceImpl implements BookingService {
     private final MeetingBookingRepository bookingRepository;
     private final BookingMapper bookingMapper;
     private final RoomServiceClient roomServiceClient;
+    private final com.meetingroom.booking.client.NotificationClient notificationClient;
 
     @Override
     @Transactional
@@ -88,6 +89,25 @@ public class BookingServiceImpl implements BookingService {
 
         MeetingBooking savedBooking = bookingRepository.save(booking);
         log.info("Meeting booking created successfully with ID: {}", savedBooking.getId());
+
+        // Dispatch async email confirmation
+        try {
+            notificationClient.sendBooking(com.meetingroom.booking.client.request.BookingNotificationRequest.builder()
+                    .bookingId(savedBooking.getId())
+                    .meetingTitle(savedBooking.getMeetingTitle())
+                    .employeeName(savedBooking.getEmployeeName())
+                    .employeeEmail(savedBooking.getEmployeeEmail())
+                    .roomName(savedBooking.getRoomName())
+                    .bookingDate(savedBooking.getBookingDate().toString())
+                    .startTime(savedBooking.getStartTime().toString())
+                    .endTime(savedBooking.getEndTime().toString())
+                    .isCancellation(false)
+                    .build());
+            log.info("Booking notification request queued successfully for ID: {}", savedBooking.getId());
+        } catch (Exception ex) {
+            log.error("Failed to invoke notification-service on booking creation", ex);
+        }
+
         return bookingMapper.toResponse(savedBooking);
     }
 
@@ -115,6 +135,26 @@ public class BookingServiceImpl implements BookingService {
         MeetingBooking cancelledBooking = bookingRepository.save(booking);
 
         log.info("Booking ID: {} cancelled successfully. Room slot freed.", id);
+
+        // Dispatch async email cancellation
+        try {
+            notificationClient.sendBooking(com.meetingroom.booking.client.request.BookingNotificationRequest.builder()
+                    .bookingId(cancelledBooking.getId())
+                    .meetingTitle(cancelledBooking.getMeetingTitle())
+                    .employeeName(cancelledBooking.getEmployeeName())
+                    .employeeEmail(cancelledBooking.getEmployeeEmail())
+                    .roomName(cancelledBooking.getRoomName())
+                    .bookingDate(cancelledBooking.getBookingDate().toString())
+                    .startTime(cancelledBooking.getStartTime().toString())
+                    .endTime(cancelledBooking.getEndTime().toString())
+                    .isCancellation(true)
+                    .cancellationReason(cancelledBooking.getCancellationReason())
+                    .build());
+            log.info("Cancellation notification request queued successfully for ID: {}", cancelledBooking.getId());
+        } catch (Exception ex) {
+            log.error("Failed to invoke notification-service on booking cancellation", ex);
+        }
+
         return bookingMapper.toResponse(cancelledBooking);
     }
 

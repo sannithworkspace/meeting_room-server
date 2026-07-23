@@ -92,4 +92,15 @@ public class UserController {
         userService.deleteUser(id);
         return ResponseEntity.ok(ApiResponse.success("User deleted successfully"));
     }
+
+    @PostMapping("/verify-otp")
+    @Operation(summary = "Verify OTP code to activate employee account")
+    public ResponseEntity<ApiResponse<Void>> verifyOtp(
+            @RequestParam String email,
+            @RequestParam String otp
+    ) {
+        log.info("REST request to verify OTP for email: {}", email);
+        userService.verifyOtp(email, otp);
+        return ResponseEntity.ok(ApiResponse.success("Account activated successfully"));
+    }
 }

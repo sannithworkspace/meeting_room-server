@@ -18,3 +18,18 @@ management:
 logging:
   pattern:
     level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
+
+---
+# ─────────────────────────────────────────────────────────────
+# Local Dev profile overrides: Force 127.0.0.1 to avoid VPN conflicts
+# ─────────────────────────────────────────────────────────────
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+eureka:
+  instance:
+    prefer-ip-address: true
+    ip-address: 127.0.0.1
+    hostname: localhost

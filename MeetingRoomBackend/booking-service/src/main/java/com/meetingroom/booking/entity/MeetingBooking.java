@@ -83,4 +83,8 @@ public class MeetingBooking extends AuditableEntity {
 
     @Column(name = "cancellation_reason", length = 500)
     private String cancellationReason;
+
+    @Column(name = "reminder_sent", nullable = false)
+    @Builder.Default
+    private Boolean reminderSent = false;
 }

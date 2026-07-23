@@ -55,6 +55,16 @@ spring:
                 name: roomServiceCircuitBreaker
                 fallbackUri: forward:/fallback/room
 
+        - id: notification-service
+          uri: lb://NOTIFICATION-SERVICE
+          predicates:
+            - Path=/notifications/**, /notification-service/v3/api-docs
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: notificationServiceCircuitBreaker
+                fallbackUri: forward:/fallback/booking
+
 eureka:
   instance:
     prefer-ip-address: true

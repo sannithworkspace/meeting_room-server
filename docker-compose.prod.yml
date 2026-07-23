@@ -116,6 +116,24 @@ services:
       eureka-server:
         condition: service_healthy
 
+  notification-service:
+    image: ${DOCKER_HUB_USERNAME}/meetingroom-notification-service:latest
+    container_name: notification-service
+    restart: always
+    ports:
+      - "8086:8086"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - EUREKA_SERVER_URL=http://${EUREKA_USERNAME:-admin}:${EUREKA_PASSWORD:-admin123}@eureka-server:8761/eureka/
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USERNAME=${SMTP_USERNAME}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+
   frontend:
     image: ${DOCKER_HUB_USERNAME}/meetingroom-frontend:latest
     container_name: frontend

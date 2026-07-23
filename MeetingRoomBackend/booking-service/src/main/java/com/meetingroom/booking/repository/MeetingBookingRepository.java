@@ -67,5 +67,20 @@ public interface MeetingBookingRepository extends JpaRepository<MeetingBooking, 
             Pageable pageable
     );
 
+    @Query("""
+        SELECT b FROM MeetingBooking b 
+        WHERE b.status = com.meetingroom.booking.entity.BookingStatus.UPCOMING 
+          AND b.bookingDate = :date 
+          AND b.startTime >= :currentTime 
+          AND b.startTime <= :targetTime 
+          AND b.reminderSent = false 
+          AND b.isDeleted = false
+    """)
+    List<MeetingBooking> findPendingReminders(
+            @Param("date") LocalDate date,
+            @Param("currentTime") LocalTime currentTime,
+            @Param("targetTime") LocalTime targetTime
+    );
+
     List<MeetingBooking> findByStatusInAndIsDeletedFalse(List<BookingStatus> statuses);
 }
