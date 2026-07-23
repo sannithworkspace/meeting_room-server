@@ -160,7 +160,7 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
             
-            helper.setFrom(fromEmail);
+            helper.setFrom(cleanEmail(fromEmail));
             helper.setTo(toEmail);
             helper.setSubject(subject);
             helper.setText(htmlContent, true);
@@ -205,5 +205,17 @@ public class EmailService {
                "LOCATION:" + request.getRoomName() + "\r\n" +
                "END:VEVENT\r\n" +
                "END:VCALENDAR";
+    }
+
+    private String cleanEmail(String email) {
+        if (email == null) return null;
+        email = email.trim();
+        if (email.startsWith("\"") && email.endsWith("\"")) {
+            email = email.substring(1, email.length() - 1).trim();
+        }
+        if (email.startsWith("'") && email.endsWith("'")) {
+            email = email.substring(1, email.length() - 1).trim();
+        }
+        return email;
     }
 }
