@@ -56,6 +56,9 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("Reset verification code sent successfully"));
     }
 
+
+//    these the password reset endpoints
+    
     @PostMapping("/reset-password")
     @Operation(summary = "Reset password using OTP verification code")
     public ResponseEntity<ApiResponse<Void>> resetPassword(
