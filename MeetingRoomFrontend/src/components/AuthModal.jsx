@@ -19,6 +19,57 @@ const registerSchema = Yup.object().shape({
   department: Yup.string()
 });
 
+const getFriendlyErrorMessage = (rawError) => {
+  if (!rawError) return '';
+  const err = rawError.toLowerCase();
+  
+  if (err.includes('bad credentials')) {
+    return 'Invalid email address or password. Please try again.';
+  }
+  if (err.includes('disabled') || err.includes('not activated')) {
+    return 'Your account is not active. Please click "Activate Account" above to verify your email.';
+  }
+  if (err.includes('already exists') || err.includes('duplicate')) {
+    return 'An account with this email address already exists.';
+  }
+  if (err.includes('not found') || err.includes('no static resource')) {
+    return 'Server configuration error. Please check backend connection.';
+  }
+  if (err.includes('network error') || err.includes('timeout')) {
+    return 'Network error. Please check your internet connection and try again.';
+  }
+  return rawError;
+};
+
+const getPasswordStrength = (pass) => {
+  if (!pass) return { score: 0, label: '', color: '' };
+  
+  let score = 0;
+  if (pass.length >= 6) score += 1;
+  if (pass.length >= 8) score += 1;
+  
+  const hasUppercase = /[A-Z]/.test(pass);
+  const hasLowercase = /[a-z]/.test(pass);
+  const hasDigit = /[0-9]/.test(pass);
+  const hasSpecial = /[^A-Za-z0-9]/.test(pass);
+  
+  const varietyCount = [hasUppercase, hasLowercase, hasDigit, hasSpecial].filter(Boolean).length;
+  if (varietyCount >= 2) score += 1;
+  if (varietyCount >= 4) score += 1;
+  
+  if (pass.length < 6) {
+    return { score: 1, label: 'Too Short (Weak)', color: '#ef4444' };
+  }
+  
+  if (score <= 2) {
+    return { score: 2, label: 'Weak', color: '#f97316' };
+  } else if (score === 3) {
+    return { score: 3, label: 'Medium', color: '#eab308' };
+  } else {
+    return { score: 4, label: 'Strong', color: '#22c55e' };
+  }
+};
+
 const AuthModal = ({ onClose }) => {
   const [tab, setTab] = useState('login'); // 'login' | 'register' | 'otp' | 'forgot' | 'reset' | 'resend-otp'
   const [registeredEmail, setRegisteredEmail] = useState('');
@@ -228,7 +279,7 @@ const AuthModal = ({ onClose }) => {
               </div>
             )}
 
-            {error && <div className="auth-error-alert">{error}</div>}
+            {error && <div className="auth-error-alert">{getFriendlyErrorMessage(error)}</div>}
             
             {registerSuccess && tab === 'register' && (
               <div className="auth-success-alert">
@@ -378,6 +429,22 @@ const AuthModal = ({ onClose }) => {
                     onChange={registerFormik.handleChange}
                     onBlur={registerFormik.handleBlur}
                   />
+                  {registerFormik.values.password && (
+                    <div style={{ marginTop: '6px' }}>
+                      <div style={{ display: 'flex', height: '4px', width: '100%', borderRadius: '2px', backgroundColor: '#e2e8f0', overflow: 'hidden' }}>
+                        <div 
+                          style={{ 
+                            width: `${(getPasswordStrength(registerFormik.values.password).score / 4) * 100}%`, 
+                            backgroundColor: getPasswordStrength(registerFormik.values.password).color,
+                            transition: 'width 0.3s ease, background-color 0.3s ease'
+                          }} 
+                        />
+                      </div>
+                      <span style={{ fontSize: '11px', color: getPasswordStrength(registerFormik.values.password).color, fontWeight: '500', marginTop: '4px', display: 'inline-block' }}>
+                        Password Strength: {getPasswordStrength(registerFormik.values.password).label}
+                      </span>
+                    </div>
+                  )}
                   {registerFormik.touched.password && registerFormik.errors.password && (
                     <span className="form-error">{registerFormik.errors.password}</span>
                   )}
@@ -490,6 +557,22 @@ const AuthModal = ({ onClose }) => {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                   />
+                  {newPassword && (
+                    <div style={{ marginTop: '6px' }}>
+                      <div style={{ display: 'flex', height: '4px', width: '100%', borderRadius: '2px', backgroundColor: '#e2e8f0', overflow: 'hidden' }}>
+                        <div 
+                          style={{ 
+                            width: `${(getPasswordStrength(newPassword).score / 4) * 100}%`, 
+                            backgroundColor: getPasswordStrength(newPassword).color,
+                            transition: 'width 0.3s ease, background-color 0.3s ease'
+                          }} 
+                        />
+                      </div>
+                      <span style={{ fontSize: '11px', color: getPasswordStrength(newPassword).color, fontWeight: '500', marginTop: '4px', display: 'inline-block' }}>
+                        Password Strength: {getPasswordStrength(newPassword).label}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="form-group">
